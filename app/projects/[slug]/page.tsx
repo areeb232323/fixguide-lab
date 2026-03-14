@@ -3,11 +3,7 @@ import { getProjectBySlug } from "@/lib/content";
 import { getProjectDetail } from "@/lib/api-client";
 import { Breadcrumbs, TestingStatusBadge, DifficultyBadge, DetailMeta, TableOfContents } from "@/components/site-ui";
 import { MdxRenderer } from "@/components/mdx-renderer";
-import { CommentForm } from "@/components/comment-form";
-import { VoteButtons } from "@/components/vote-buttons";
-import { ReportDialog } from "@/components/report-dialog";
 import { AiChatPanel } from "@/components/ai-chat-panel";
-import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 
 interface Props {
@@ -28,7 +24,6 @@ export default async function ProjectDetailPage({ params }: Props) {
 
   const detail = await getProjectDetail(slug);
   const parts = detail?.parts ?? [];
-  const comments = detail?.comments ?? [];
 
   const budgetTotal = parts.reduce((sum, p) => sum + p.price_budget, 0);
   const bestTotal = parts.reduce((sum, p) => sum + p.price_best, 0);
@@ -100,33 +95,6 @@ export default async function ProjectDetailPage({ params }: Props) {
           </aside>
         )}
       </div>
-
-      {/* Community Notes */}
-      <section>
-        <h2 className="text-2xl font-semibold">Community Notes</h2>
-        {comments.length === 0 ? (
-          <p className="mt-4 text-sm text-[var(--muted)]">No community notes yet.</p>
-        ) : (
-          <div className="mt-4 space-y-4">
-            {comments.map((note) => (
-              <div key={note.id} className="card-surface rounded-[1.2rem] px-5 py-4">
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="font-semibold">{note.user_profiles?.display_name ?? "Anonymous"}</span>
-                  <span className="text-[var(--muted)]">{formatDate(note.created_at)}</span>
-                </div>
-                <p className="mt-2 text-sm leading-7">{note.body}</p>
-                <div className="mt-3 flex items-center gap-4">
-                  <VoteButtons commentId={note.id} initialHelpful={note.helpful_count} initialUnhelpful={note.unhelpful_count} />
-                  <ReportDialog contentType="comment" contentId={note.id} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Comment Form */}
-      <CommentForm targetType="project" targetId={project.id} />
 
       {/* AI Chat */}
       <AiChatPanel contextId={project.id} contextType="project" />

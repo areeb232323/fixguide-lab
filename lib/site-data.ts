@@ -221,104 +221,18 @@ const noteSchema = CommentSchema.extend({
 
 export type CommunityNote = z.infer<typeof noteSchema>;
 
-const notes = [
-  {
-    id: "40000000-0000-4000-8000-000000000001",
-    body: "This migration flow worked on my older ThinkPad. Exporting SSH keys saved me a second trip through setup.",
-    author_id: "00000000-0000-4000-8000-000000000004",
-    target_type: "guide",
-    target_id: "10000000-0000-4000-8000-000000000001",
-    hidden: false,
-    created_at: "2026-03-03T18:00:00.000Z",
-    updated_at: "2026-03-03T18:00:00.000Z",
-    helpful_count: 12,
-    unhelpful_count: 1,
-  },
-  {
-    id: "40000000-0000-4000-8000-000000000002",
-    body: "Boot-repair from a live USB restored GRUB after my first dual-boot attempt. I added that to my own notes.",
-    author_id: "00000000-0000-4000-8000-000000000004",
-    target_type: "guide",
-    target_id: "10000000-0000-4000-8000-000000000002",
-    hidden: false,
-    created_at: "2026-03-04T18:00:00.000Z",
-    updated_at: "2026-03-04T18:00:00.000Z",
-    helpful_count: 7,
-    unhelpful_count: 0,
-  },
-  {
-    id: "40000000-0000-4000-8000-000000000003",
-    body: "I had to keep one offline NIC driver on a second USB drive before reinstalling Windows on a lab desktop.",
-    author_id: "00000000-0000-4000-8000-000000000002",
-    target_type: "guide",
-    target_id: "10000000-0000-4000-8000-000000000005",
-    hidden: false,
-    created_at: "2026-03-06T18:00:00.000Z",
-    updated_at: "2026-03-06T18:00:00.000Z",
-    helpful_count: 9,
-    unhelpful_count: 0,
-  },
-  {
-    id: "40000000-0000-4000-8000-000000000004",
-    body: "Using a clone DHT11 still worked for our classroom demo, but we had to slow the sampling interval to two seconds.",
-    author_id: "00000000-0000-4000-8000-000000000004",
-    target_type: "project",
-    target_id: "20000000-0000-4000-8000-000000000001",
-    hidden: false,
-    created_at: "2026-03-01T18:00:00.000Z",
-    updated_at: "2026-03-01T18:00:00.000Z",
-    helpful_count: 16,
-    unhelpful_count: 1,
-  },
-  {
-    id: "40000000-0000-4000-8000-000000000005",
-    body: "A capacitive probe lasts much longer than the cheap resistive stick sensors. Worth the tiny price bump.",
-    author_id: "00000000-0000-4000-8000-000000000002",
-    target_type: "project",
-    target_id: "20000000-0000-4000-8000-000000000002",
-    hidden: false,
-    created_at: "2026-03-05T18:00:00.000Z",
-    updated_at: "2026-03-05T18:00:00.000Z",
-    helpful_count: 11,
-    unhelpful_count: 0,
-  },
-  {
-    id: "40000000-0000-4000-8000-000000000006",
-    body: "The L298N got warm but stayed within spec on our small motors. A heatsink helped when we let the robot run for twenty minutes straight.",
-    author_id: "00000000-0000-4000-8000-000000000004",
-    target_type: "project",
-    target_id: "20000000-0000-4000-8000-000000000003",
-    hidden: false,
-    created_at: "2026-03-07T18:00:00.000Z",
-    updated_at: "2026-03-07T18:00:00.000Z",
-    helpful_count: 5,
-    unhelpful_count: 2,
-  },
-  {
-    id: "40000000-0000-4000-8000-000000000007",
-    body: "Our weather station brown-out problem disappeared once we added a capacitor between 5V and GND on the display rail.",
-    author_id: "00000000-0000-4000-8000-000000000001",
-    target_type: "project",
-    target_id: "20000000-0000-4000-8000-000000000004",
-    hidden: false,
-    created_at: "2026-03-08T18:00:00.000Z",
-    updated_at: "2026-03-08T18:00:00.000Z",
-    helpful_count: 8,
-    unhelpful_count: 0,
-  },
-  {
-    id: "40000000-0000-4000-8000-000000000008",
-    body: "The reed switch project is a good first soldering exercise as long as you keep it battery-only and verify polarity before closing the case.",
-    author_id: "00000000-0000-4000-8000-000000000003",
-    target_type: "project",
-    target_id: "20000000-0000-4000-8000-000000000005",
-    hidden: false,
-    created_at: "2026-03-09T18:00:00.000Z",
-    updated_at: "2026-03-09T18:00:00.000Z",
-    helpful_count: 6,
-    unhelpful_count: 0,
-  },
-] as const;
+const notes: Array<{
+  id: string;
+  body: string;
+  author_id: string;
+  target_type: string;
+  target_id: string;
+  hidden: boolean;
+  created_at: string;
+  updated_at: string;
+  helpful_count: number;
+  unhelpful_count: number;
+}> = [];
 
 export const communityNotes = notes.map((note) =>
   noteSchema.parse({
@@ -330,56 +244,9 @@ export const communityNotes = notes.map((note) =>
   }),
 );
 
-const reports = [
-  {
-    id: "50000000-0000-4000-8000-000000000001",
-    reporter_id: "00000000-0000-4000-8000-000000000004",
-    target_type: "comment",
-    target_id: "40000000-0000-4000-8000-000000000006",
-    reason: "inaccurate",
-    details: "The motor driver note needs clearer context about load and airflow. It reads more absolute than the bench data suggests.",
-    status: "pending",
-    created_at: "2026-03-10T12:00:00.000Z",
-    updated_at: "2026-03-10T12:00:00.000Z",
-  },
-  {
-    id: "50000000-0000-4000-8000-000000000002",
-    reporter_id: "00000000-0000-4000-8000-000000000004",
-    target_type: "guide",
-    target_id: "10000000-0000-4000-8000-000000000004",
-    reason: "unsafe",
-    details: "Please add a stronger warning that BIOS resets can break classroom-managed boot policies on shared machines.",
-    status: "reviewing",
-    created_at: "2026-03-11T12:00:00.000Z",
-    updated_at: "2026-03-12T12:00:00.000Z",
-  },
-  {
-    id: "50000000-0000-4000-8000-000000000003",
-    reporter_id: "00000000-0000-4000-8000-000000000002",
-    target_type: "project",
-    target_id: "20000000-0000-4000-8000-000000000004",
-    reason: "other",
-    details: "Needs an extra weatherproofing note before we promote it on the home page.",
-    status: "pending",
-    created_at: "2026-03-12T12:00:00.000Z",
-    updated_at: "2026-03-12T12:00:00.000Z",
-  },
-] as const;
+export const moderationReports: Array<z.infer<typeof ReportSchema>> = [];
 
-export const moderationReports = reports.map((report) => ReportSchema.parse(report));
-
-export const moderationActions = [
-  ModeratorActionSchema.parse({
-    id: "60000000-0000-4000-8000-000000000001",
-    moderator_id: "00000000-0000-4000-8000-000000000003",
-    report_id: "50000000-0000-4000-8000-000000000002",
-    action_type: "edit_content",
-    target_type: "guide",
-    target_id: "10000000-0000-4000-8000-000000000004",
-    reason: "Requested stronger BIOS-change warning and a reversible rollback step.",
-    created_at: "2026-03-12T17:00:00.000Z",
-  }),
-];
+export const moderationActions: Array<z.infer<typeof ModeratorActionSchema>> = [];
 
 export const officialSources = [
   {
