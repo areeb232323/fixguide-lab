@@ -1,0 +1,87 @@
+---
+id: "20000000-0000-4000-8000-000000000002"
+slug: "smart-plant-watering"
+title: "Smart Plant Watering System"
+summary: "Automatic plant watering system using Arduino and a soil moisture sensor."
+difficulty: "Intermediate"
+time_estimate_minutes: 120
+cost_range_min: 10
+cost_range_max: 23
+tags: ["arduino", "automation", "plants", "sensor"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-02-28T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000002"
+published: true
+hidden: false
+created_at: "2026-02-05T12:00:00.000Z"
+updated_at: "2026-02-28T12:00:00.000Z"
+kicker: "Automation Project"
+cover: "/images/projects/plant-watering.jpg"
+project_type: "Arduino"
+---
+
+## Overview
+
+This system monitors soil moisture and automatically activates a water pump when the soil gets too dry. It is a great introduction to sensor-based automation.
+
+## How It Works
+
+A capacitive soil moisture sensor outputs an analog voltage that decreases as moisture increases. The Arduino reads this value and triggers a relay-controlled pump when the reading crosses a dry threshold.
+
+## Wiring
+
+1. **Moisture sensor** signal pin → Arduino analog pin A0
+2. **Moisture sensor** VCC → Arduino 5V, GND → Arduino GND
+3. **Relay module** signal → Arduino digital pin 7
+4. **Relay module** VCC → Arduino 5V, GND → Arduino GND
+5. **Water pump** connected through the relay (normally open terminal)
+
+> **WATER AND ELECTRONICS**: Keep all wiring and the relay module away from water splashes. Use a relay module rated for your pump's voltage and current. Never submerge electronic connections.
+
+## Code
+
+```cpp
+#define MOISTURE_PIN A0
+#define RELAY_PIN 7
+#define DRY_THRESHOLD 600  // Adjust based on your sensor calibration
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH); // Relay off (active-low)
+}
+
+void loop() {
+  int moisture = analogRead(MOISTURE_PIN);
+  Serial.print("Moisture: ");
+  Serial.println(moisture);
+
+  if (moisture > DRY_THRESHOLD) {
+    Serial.println("Soil dry — pump ON");
+    digitalWrite(RELAY_PIN, LOW);  // Activate pump
+    delay(3000);                    // Water for 3 seconds
+    digitalWrite(RELAY_PIN, HIGH); // Stop pump
+  }
+
+  delay(5000); // Check every 5 seconds
+}
+```
+
+## Calibration
+
+1. Read the sensor value in completely dry soil (record as your "dry" value)
+2. Read the sensor value in well-watered soil (record as your "wet" value)
+3. Set `DRY_THRESHOLD` to a value between the two readings
+
+## Troubleshooting
+
+- **Pump never turns on**: Check relay wiring and verify the threshold value with Serial Monitor
+- **Pump runs constantly**: Lower the threshold value or check if the sensor is making good soil contact
+- **Sensor readings are erratic**: Use a capacitive sensor instead of a resistive one for better longevity
+
+## Test Procedure
+
+1. Insert the sensor in dry soil — Serial Monitor should show a high value and the pump should activate
+2. Insert the sensor in wet soil — the pump should remain off
+3. Let the system run for 30 minutes and verify it cycles correctly
+4. Check for any water near the electronics

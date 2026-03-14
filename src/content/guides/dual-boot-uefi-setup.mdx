@@ -1,0 +1,98 @@
+---
+id: "10000000-0000-4000-8000-000000000002"
+slug: "dual-boot-uefi-setup"
+title: "Dual Boot Setup with UEFI"
+summary: "How to set up a Windows + Linux dual boot on a UEFI system safely."
+difficulty: "Advanced"
+time_estimate_minutes: 90
+os: "Any"
+tags: ["dual-boot", "uefi", "linux", "windows"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-02-20T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-01-20T12:00:00.000Z"
+updated_at: "2026-02-20T12:00:00.000Z"
+kicker: "Dual Boot"
+cover: "/images/guides/dual-boot.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Back up all data on both drives
+- [ ] Confirm your system uses UEFI mode (not Legacy/CSM)
+- [ ] Have both OS installer USBs ready
+- [ ] Ensure at least 50 GB free space for the second OS
+- [ ] Know your UEFI key (usually F2 or Del at boot)
+
+> **DISK PARTITIONING**: Incorrect partitioning can destroy all data on a drive. Triple-check your partition selections before confirming any changes.
+
+## Preparing Windows
+
+1. Open **Disk Management** (right-click Start → Disk Management)
+2. Right-click your main Windows partition → **Shrink Volume**
+3. Shrink by at least 50,000 MB (50 GB) for the Linux partition
+4. Do NOT format the new unallocated space — the Linux installer will handle it
+
+### Disable Fast Startup
+
+Fast Startup can cause filesystem corruption in dual-boot setups:
+
+1. Open Control Panel → Power Options → "Choose what the power buttons do"
+2. Click "Change settings that are currently unavailable"
+3. Uncheck "Turn on fast startup"
+4. Save changes
+
+## Configuring UEFI
+
+1. Restart and enter UEFI settings
+2. **Disable Secure Boot** temporarily (you can re-enable it later for Ubuntu/Fedora)
+3. Verify boot mode is set to UEFI (not Legacy/CSM)
+4. Save and exit
+
+> **BIOS/UEFI WARNING**: Changing firmware settings incorrectly can prevent your system from booting. Only change the settings described above.
+
+## Installing Linux
+
+1. Boot from the Linux USB installer
+2. Choose **"Install alongside Windows Boot Manager"**
+3. The installer should detect the free space you created
+4. Select the unallocated space — do NOT format the Windows partition
+5. Complete the installation normally
+6. Reboot when prompted
+
+## Verifying the Boot Menu
+
+After installation, GRUB (the Linux boot loader) should appear at startup with options for both Linux and Windows.
+
+If GRUB does not appear:
+1. Boot from the Linux USB in "Try" mode
+2. Open a terminal
+3. Run `sudo update-grub`
+4. Reboot and check again
+
+### If Windows Boot Manager Takes Over
+
+Run these commands from a Linux live USB terminal:
+
+```bash
+sudo mount /dev/sdaX /mnt  # Replace sdaX with your Linux partition
+sudo grub-install --root-directory=/mnt /dev/sda
+sudo update-grub
+```
+
+## Common Mistakes
+
+- Formatting the Windows partition during Linux install
+- Not disabling Fast Startup (causes NTFS corruption)
+- Installing in Legacy mode when Windows uses UEFI
+- Forgetting to shrink the partition before installing
+
+## Verification
+
+- [ ] GRUB boot menu shows both OS options
+- [ ] Windows boots normally from the GRUB menu
+- [ ] Linux boots normally from the GRUB menu
+- [ ] Both operating systems can access the internet
+- [ ] Time zone is correct in both OS (set UTC in Linux to avoid clock drift)

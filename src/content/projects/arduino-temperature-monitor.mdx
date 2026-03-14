@@ -1,0 +1,93 @@
+---
+id: "20000000-0000-4000-8000-000000000001"
+slug: "arduino-temperature-monitor"
+title: "Arduino Temperature Monitor"
+summary: "Build a simple temperature and humidity monitor with an Arduino and DHT11 sensor."
+difficulty: "Beginner"
+time_estimate_minutes: 60
+cost_range_min: 14
+cost_range_max: 42
+tags: ["arduino", "sensor", "temperature", "beginner"]
+testing_status: "CommunityVerified"
+last_reviewed_date: "2026-03-01T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000002"
+published: true
+hidden: false
+created_at: "2026-02-04T12:00:00.000Z"
+updated_at: "2026-03-01T12:00:00.000Z"
+kicker: "Beginner Project"
+cover: "/images/projects/temp-monitor.jpg"
+project_type: "Arduino"
+---
+
+## Overview
+
+This project reads temperature and humidity from a DHT11 sensor and displays the values on the Serial Monitor. It is an ideal first project for students new to microcontrollers.
+
+## Parts Needed
+
+See the parts list below for budget and best-value options.
+
+## Wiring Diagram
+
+Connect the DHT11 sensor to your Arduino:
+
+- **VCC** → Arduino 5V
+- **GND** → Arduino GND
+- **DATA** → Arduino Digital Pin 2 (with a 10kΩ pull-up resistor between DATA and VCC)
+
+> **STATIC DAMAGE**: Handle the sensor and Arduino by the edges. Avoid touching the metal pins directly to prevent electrostatic discharge damage.
+
+## Code
+
+Upload this sketch using the Arduino IDE:
+
+```cpp
+#include <DHT.h>
+#define DHTPIN 2
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  Serial.println("DHT11 Temperature Monitor Ready");
+}
+
+void loop() {
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Error: Failed to read from sensor");
+    delay(2000);
+    return;
+  }
+
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.print("°C  Humidity: ");
+  Serial.print(humidity);
+  Serial.println("%");
+
+  delay(2000);
+}
+```
+
+## Why It Works
+
+The DHT11 sensor contains a thermistor and a capacitive humidity sensor. It communicates with the Arduino using a single-wire digital protocol, sending 40 bits of data containing the humidity and temperature readings.
+
+## Troubleshooting
+
+- **Sensor reads NaN**: Check wiring connections, especially the pull-up resistor
+- **Values seem frozen**: Increase the delay between readings (DHT11 needs at least 1 second between reads)
+- **Humidity reads 0**: Verify the DATA pin connection and ensure the pull-up resistor is in place
+
+## Test Procedure
+
+1. Upload the code and open Serial Monitor at 9600 baud
+2. Verify temperature reading matches a known thermometer within ±2°C
+3. Breathe gently on the sensor — humidity should increase by 10-20%
+4. Move the sensor to a different room and verify the reading changes

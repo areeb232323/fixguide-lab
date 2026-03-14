@@ -1,0 +1,87 @@
+---
+id: "10000000-0000-4000-8000-000000000003"
+slug: "linux-to-windows-migration"
+title: "Linux to Windows Migration Guide"
+summary: "Migrating from Linux back to Windows, including driver preparation and data backup."
+difficulty: "Intermediate"
+time_estimate_minutes: 90
+os: "Windows"
+tags: ["migration", "windows", "linux", "os-install"]
+testing_status: "Draft"
+last_reviewed_date: null
+author_id: "00000000-0000-4000-8000-000000000002"
+published: true
+hidden: false
+created_at: "2026-02-01T12:00:00.000Z"
+updated_at: "2026-02-15T12:00:00.000Z"
+kicker: "OS Migration"
+cover: "/images/guides/linux-to-win.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Back up your entire home directory (`/home/username/`)
+- [ ] Export application configurations and dotfiles
+- [ ] Download the Windows ISO from Microsoft's official website
+- [ ] Have your Windows product key ready
+- [ ] Download network drivers for your hardware (in case Windows lacks them after install)
+
+> **DATA LOSS WARNING**: Installing Windows will overwrite your Linux partition. There is no way to recover Linux data after this step unless you have a backup.
+
+## Backing Up Linux Data
+
+### Essential files to back up
+
+```bash
+# Create a compressed backup of your home directory
+tar -czf ~/backup-home.tar.gz -C /home username/
+
+# Copy to external drive
+cp ~/backup-home.tar.gz /media/external-drive/
+```
+
+### Often-forgotten items
+
+- SSH keys: `~/.ssh/`
+- Git configuration: `~/.gitconfig`
+- Browser profiles: `~/.mozilla/` or `~/.config/google-chrome/`
+- Application configs: `~/.config/`
+- Crontab: `crontab -l > ~/crontab-backup.txt`
+- Server configs if you run any services
+
+## Creating the Windows USB
+
+1. Download the Windows ISO from microsoft.com/software-download
+2. On another computer (or from a live USB), use **WoeUSB** or **Ventoy** to create the installer
+3. Verify the USB boots correctly before proceeding
+
+## Installing Windows
+
+1. Insert the Windows USB and restart
+2. Enter boot menu and select the USB drive
+3. Follow the Windows installer
+4. When asked "Where do you want to install Windows?", delete the Linux partitions
+5. Select the unallocated space and let Windows create its partitions
+6. Complete the installation wizard
+
+## Post-Install Setup
+
+1. Install chipset and network drivers from your manufacturer's website
+2. Run Windows Update repeatedly until no more updates appear
+3. Install your applications
+4. Restore files from your backup to the appropriate Windows folders
+
+## Common Mistakes
+
+- Forgetting hidden config files (dotfiles starting with `.`)
+- Not having network drivers ready offline for the initial setup
+- Skipping the verification of the backup before wiping Linux
+- Losing SSH keys and having to regenerate them everywhere
+
+## Verification
+
+- [ ] Windows boots and runs correctly
+- [ ] Network connectivity works (Wi-Fi and/or Ethernet)
+- [ ] All backed-up files are accessible
+- [ ] Key applications are installed
+- [ ] Drivers are up to date (Device Manager shows no warnings)

@@ -1,0 +1,96 @@
+---
+id: "10000000-0000-4000-8000-000000000004"
+slug: "bios-uefi-recovery"
+title: "BIOS/UEFI Recovery and Reset Guide"
+summary: "How to recover from misconfigured BIOS/UEFI settings and restore boot functionality."
+difficulty: "Advanced"
+time_estimate_minutes: 45
+os: "Any"
+tags: ["bios", "uefi", "recovery", "troubleshooting"]
+testing_status: "Draft"
+last_reviewed_date: null
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-02-10T12:00:00.000Z"
+updated_at: "2026-02-25T12:00:00.000Z"
+kicker: "Troubleshooting"
+cover: "/images/guides/bios-recovery.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Identify your motherboard or laptop manufacturer and model
+- [ ] Have access to a second device for looking up documentation
+- [ ] Ensure stable power supply (never interrupt a BIOS operation)
+- [ ] If on a laptop, plug in the charger — do not run on battery
+
+> **FIRMWARE WARNING**: Modifying BIOS/UEFI settings incorrectly can prevent your computer from booting. Interrupting a firmware update can permanently brick your device. Always ensure stable power and follow manufacturer instructions exactly.
+
+## When to Reset BIOS/UEFI
+
+Common symptoms that a BIOS reset can fix:
+
+- Computer won't boot after changing settings
+- Boot order is wrong and the OS won't load
+- Overclocking settings causing instability
+- Secure Boot preventing a valid OS from loading
+- Hardware not detected after a change
+
+## Method 1: Reset via UEFI Menu
+
+1. Restart and enter UEFI settings (usually F2, Del, or F10 at the splash screen)
+2. Navigate to **Exit** or **Save & Exit** tab
+3. Select **"Load Optimized Defaults"** or **"Reset to Default"**
+4. Save and exit
+5. Your system should boot normally with factory BIOS settings
+
+## Method 2: CMOS Battery Reset
+
+If you cannot access the UEFI menu:
+
+1. Power off the computer and unplug it
+2. Open the case (desktop) or bottom panel (laptop)
+3. Locate the CMOS battery (a silver coin-cell battery on the motherboard)
+4. Remove the battery carefully
+5. Wait 30 seconds
+6. Reinsert the battery
+7. Close the case and power on
+
+> **ELECTRICAL SAFETY**: Always unplug the computer before opening the case. Discharge static by touching the metal case before handling components.
+
+## Method 3: BIOS Recovery Jumper
+
+Some motherboards have a CMOS reset jumper:
+
+1. Power off and unplug
+2. Locate the CLRTC or CMOS_RST jumper (check your motherboard manual)
+3. Move the jumper from its default position to the reset position
+4. Wait 10 seconds
+5. Move the jumper back
+6. Power on
+
+## Restoring Boot Order
+
+After a reset, you may need to reconfigure:
+
+1. Enter UEFI settings
+2. Go to the Boot tab
+3. Set your OS drive as the first boot device
+4. Enable or disable Secure Boot as needed
+5. Save and exit
+
+## Common Mistakes
+
+- Interrupting a BIOS update (can permanently brick the board)
+- Resetting BIOS on classroom or managed machines without IT approval
+- Forgetting to restore boot order after reset
+- Not grounding yourself before touching internal components
+
+## Verification
+
+- [ ] Computer boots to the operating system
+- [ ] UEFI settings are accessible at startup
+- [ ] Boot order is correct
+- [ ] Date and time are correct (CMOS reset may reset the clock)
+- [ ] All hardware is detected in the OS

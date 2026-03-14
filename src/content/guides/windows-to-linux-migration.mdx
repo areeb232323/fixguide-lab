@@ -1,0 +1,87 @@
+---
+id: "10000000-0000-4000-8000-000000000001"
+slug: "windows-to-linux-migration"
+title: "Windows to Linux Migration Guide"
+summary: "Step-by-step guide for migrating from Windows to Linux, with backup procedures and common pitfalls."
+difficulty: "Intermediate"
+time_estimate_minutes: 120
+os: "Linux"
+tags: ["migration", "linux", "windows", "os-install"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-01T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-01-15T12:00:00.000Z"
+updated_at: "2026-03-01T12:00:00.000Z"
+kicker: "OS Migration"
+cover: "/images/guides/win-to-linux.jpg"
+---
+
+## Pre-flight Checklist
+
+Before you begin, complete every item on this list. Skipping any step risks permanent data loss.
+
+- [ ] Back up ALL personal files to an external drive or cloud storage
+- [ ] Note every installed application you use daily
+- [ ] Export browser bookmarks and saved passwords
+- [ ] Save Wi-Fi credentials and VPN configurations
+- [ ] Record any custom drivers or peripherals you rely on
+- [ ] Verify your backup by opening files from the backup location
+
+> **DATA LOSS RISK**: This process will erase your Windows partition if you choose a full install. There is no undo. Always verify your backup before proceeding.
+
+## Choosing a Linux Distribution
+
+For most users migrating from Windows, these distributions offer the smoothest transition:
+
+- **Linux Mint** — Familiar desktop layout, excellent hardware support
+- **Ubuntu** — Largest community, most third-party software support
+- **Fedora** — Cutting-edge packages, strong security defaults
+
+Download the ISO from the official website only. Verify the SHA256 checksum after downloading.
+
+## Creating a Bootable USB
+
+1. Download **Rufus** (Windows) or **Balena Etcher** (cross-platform)
+2. Insert a USB drive with at least 8 GB capacity (all data on it will be erased)
+3. Select the downloaded ISO file
+4. Choose GPT partition scheme for UEFI systems
+5. Click Start and wait for the process to complete
+
+## Installing Linux
+
+1. Restart your computer and enter the boot menu (usually F12, F2, or Del)
+2. Select the USB drive as the boot device
+3. Choose "Try Linux" first to verify hardware compatibility
+4. If everything works, launch the installer
+5. Select **"Erase disk and install"** for a clean migration, or **"Install alongside"** for dual boot
+6. Choose your timezone, keyboard layout, and create your user account
+7. Wait for installation to complete and remove the USB when prompted
+
+> **PARTITION WARNING**: Double-check which disk you are installing to. Selecting the wrong drive will erase its contents permanently.
+
+## Post-Install Setup
+
+1. Run system updates: `sudo apt update && sudo apt upgrade -y`
+2. Install proprietary drivers if needed (Settings → Additional Drivers)
+3. Install your applications (many are available via apt, Flatpak, or Snap)
+4. Restore your files from your backup
+5. Configure your browser with imported bookmarks
+
+## Common Mistakes
+
+- Not backing up before starting the install
+- Choosing the wrong partition or disk during installation
+- Skipping driver installation (especially for Wi-Fi and GPU)
+- Forgetting to export browser data and application configs
+
+## Verification
+
+After completing the migration, verify each item:
+
+- [ ] System boots to Linux desktop without errors
+- [ ] Wi-Fi connects and internet works
+- [ ] All personal files are restored from backup
+- [ ] Key applications are installed and functional
+- [ ] Audio, display, and peripherals work correctly

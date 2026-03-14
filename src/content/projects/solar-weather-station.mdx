@@ -1,0 +1,94 @@
+---
+id: "20000000-0000-4000-8000-000000000004"
+slug: "solar-weather-station"
+title: "Solar-Powered Weather Station"
+summary: "Build a Wi-Fi-enabled weather station with ESP32 and solar power for outdoor monitoring."
+difficulty: "Intermediate"
+time_estimate_minutes: 150
+cost_range_min: 20
+cost_range_max: 40
+tags: ["esp32", "solar", "weather", "sensor", "wifi"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-08T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-02-14T12:00:00.000Z"
+updated_at: "2026-03-08T12:00:00.000Z"
+kicker: "IoT Project"
+cover: "/images/projects/weather-station.jpg"
+project_type: "ESP32"
+---
+
+## Overview
+
+This project uses an ESP32 microcontroller with a BME280 environmental sensor to measure temperature, humidity, and barometric pressure. A small solar panel provides daytime trickle charging for extended outdoor operation.
+
+## How It Works
+
+The ESP32 reads sensor data every 5 minutes, connects to Wi-Fi, and posts the readings to a simple web dashboard. Between readings, it enters deep sleep to conserve power.
+
+## Wiring
+
+### BME280 Sensor (I2C)
+
+- **VCC** → ESP32 3.3V
+- **GND** → ESP32 GND
+- **SDA** → ESP32 GPIO 21
+- **SCL** → ESP32 GPIO 22
+
+### Solar Panel
+
+- **Solar panel positive** → Charging board input
+- **Charging board output** → ESP32 VIN
+- **Battery** → Charging board battery terminals
+
+> **POWER SAFETY**: Use only low-voltage solar panels (5V or less) designed for trickle charging. Never connect high-voltage solar panels directly to the microcontroller. Use a proper charging board with overcharge protection.
+
+## Assembly
+
+1. Solder header pins to the BME280 breakout board
+2. Connect BME280 to ESP32 via I2C (SDA/SCL)
+3. Connect solar panel to the charging board
+4. Connect battery to the charging board
+5. Place everything in a weatherproof enclosure with the sensor exposed to air flow
+
+## Code Highlights
+
+```cpp
+#include <WiFi.h>
+#include <Adafruit_BME280.h>
+
+Adafruit_BME280 bme;
+
+void setup() {
+  Serial.begin(115200);
+  bme.begin(0x76);
+  // Connect to Wi-Fi and send data...
+  esp_deep_sleep(300000000); // Sleep 5 minutes
+}
+
+void loop() {
+  // Never reached — deep sleep restarts from setup()
+}
+```
+
+## Weatherproofing
+
+- Use a plastic project box with drainage holes at the bottom
+- Mount the sensor where it gets air flow but not direct rain
+- Seal cable entry points with silicone
+- Position the solar panel at a slight angle to shed water
+
+## Troubleshooting
+
+- **Brown-outs or restarts**: Add a 100µF capacitor between 3.3V and GND near the sensor
+- **Sensor reads incorrect pressure**: Verify the I2C address (0x76 or 0x77)
+- **Wi-Fi won't connect outdoors**: Ensure the ESP32 antenna is not blocked by metal enclosure parts
+
+## Test Procedure
+
+1. Power on and verify sensor readings in Serial Monitor
+2. Compare temperature with a known thermometer (should be within ±1°C)
+3. Take the station outdoors and verify Wi-Fi connectivity
+4. Monitor for 24 hours to verify solar charging keeps the battery above minimum voltage

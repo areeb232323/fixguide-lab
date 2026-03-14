@@ -1,0 +1,89 @@
+---
+id: "20000000-0000-4000-8000-000000000005"
+slug: "magnetic-door-alarm"
+title: "Magnetic Door Alarm"
+summary: "Build a simple battery-powered door alarm using a magnetic reed switch and piezo buzzer."
+difficulty: "Beginner"
+time_estimate_minutes: 45
+cost_range_min: 4
+cost_range_max: 12
+tags: ["arduino", "security", "beginner", "budget"]
+testing_status: "Draft"
+last_reviewed_date: null
+author_id: "00000000-0000-4000-8000-000000000002"
+published: true
+hidden: false
+created_at: "2026-02-18T12:00:00.000Z"
+updated_at: "2026-02-28T12:00:00.000Z"
+kicker: "Beginner Project"
+cover: "/images/projects/door-alarm.jpg"
+project_type: "Arduino"
+---
+
+## Overview
+
+This project uses a magnetic reed switch to detect when a door opens, triggering a piezo buzzer alarm. It runs on AA batteries, making it completely safe for students and requiring no mains electricity.
+
+## How It Works
+
+A reed switch contains two metal contacts sealed in a glass tube. When a magnet is nearby, the contacts close and the circuit is complete. When the magnet moves away (door opens), the contacts open and the Arduino detects the state change.
+
+## Wiring
+
+- **Reed switch** one leg → Arduino digital pin 2, other leg → GND
+- **Piezo buzzer** positive → Arduino digital pin 8, negative → GND
+- **Battery holder** → Arduino VIN and GND
+
+Enable the internal pull-up resistor on pin 2 so no external resistor is needed.
+
+> **BATTERY SAFETY**: Use only AA or AAA batteries for this project. Never use rechargeable lithium batteries without a proper protection circuit. Verify polarity before connecting the battery holder.
+
+## Code
+
+```cpp
+#define REED_PIN 2
+#define BUZZER_PIN 8
+
+void setup() {
+  pinMode(REED_PIN, INPUT_PULLUP);
+  pinMode(BUZZER_PIN, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int doorState = digitalRead(REED_PIN);
+
+  if (doorState == HIGH) {
+    // Door is open — magnet is away from switch
+    tone(BUZZER_PIN, 2000); // 2kHz alarm
+    Serial.println("ALARM: Door opened!");
+    delay(500);
+    noTone(BUZZER_PIN);
+    delay(500);
+  } else {
+    noTone(BUZZER_PIN);
+  }
+}
+```
+
+## Assembly
+
+1. Mount the reed switch on the door frame
+2. Mount the magnet on the door, aligned with the reed switch
+3. When the door is closed, the magnet should be within 1 cm of the reed switch
+4. Connect the Arduino and buzzer, and place them near the door frame
+5. Power with the AA battery holder
+
+## Troubleshooting
+
+- **Alarm sounds constantly**: Verify the magnet is close enough to the reed switch when the door is closed
+- **No alarm when door opens**: Check reed switch wiring and verify with Serial Monitor
+- **Buzzer is quiet**: Try a different frequency (1000-4000 Hz range)
+- **Battery drains quickly**: Add a `delay(100)` in the loop to reduce power consumption
+
+## Test Procedure
+
+1. With the door closed, verify no alarm sounds
+2. Open the door slowly — alarm should trigger within 1-2 cm of movement
+3. Close the door — alarm should stop
+4. Verify battery lasts at least 8 hours in standby (door closed)

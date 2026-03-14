@@ -1,0 +1,85 @@
+---
+id: "10000000-0000-4000-8000-000000000005"
+slug: "clean-windows-install"
+title: "Clean Windows Installation Guide"
+summary: "Step-by-step guide to performing a clean Windows install with driver preparation and data safety."
+difficulty: "Intermediate"
+time_estimate_minutes: 90
+os: "Windows"
+tags: ["windows", "os-install", "clean-install", "drivers"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-05T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-02-15T12:00:00.000Z"
+updated_at: "2026-03-05T12:00:00.000Z"
+kicker: "OS Installation"
+cover: "/images/guides/clean-windows.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Back up ALL personal files to an external drive
+- [ ] Download Windows ISO from microsoft.com/software-download
+- [ ] Have your product key or Microsoft account ready
+- [ ] Download network drivers for your hardware onto a second USB
+- [ ] Create a bootable USB with at least 8 GB capacity
+
+> **DATA LOSS RISK**: A clean install erases everything on the target drive. Verify your backup is complete and accessible from another device before proceeding.
+
+## Creating the Installation Media
+
+1. Download the **Media Creation Tool** from Microsoft's website
+2. Run it and select "Create installation media for another PC"
+3. Choose your language, edition, and architecture (64-bit for most systems)
+4. Select USB flash drive as the media type
+5. Wait for the download and creation to complete
+
+## Installing Windows
+
+1. Insert the USB and restart your computer
+2. Enter the boot menu (F12, F2, or Del) and select the USB drive
+3. Select language and click "Install now"
+4. Enter your product key (or click "I don't have a product key" to enter later)
+5. Choose your Windows edition
+6. Select **"Custom: Install Windows only"** for a clean install
+7. Delete all existing partitions on the target drive
+8. Select the unallocated space and click Next
+9. Wait for installation to complete
+
+### Partition Selection
+
+> **CRITICAL**: Make absolutely sure you are deleting partitions on the correct drive. If you have multiple drives, disconnect the ones you want to keep safe before starting.
+
+## First Boot Setup
+
+1. Choose your region and keyboard layout
+2. Connect to Wi-Fi (or use Ethernet)
+3. Sign in with your Microsoft account or create a local account
+4. Configure privacy settings according to your preference
+5. Wait for Windows to finish setting up
+
+## Post-Install Essentials
+
+1. Install network drivers from your backup USB if Wi-Fi does not work
+2. Run **Windows Update** repeatedly until fully current
+3. Install chipset and GPU drivers from your manufacturer
+4. Install your applications
+5. Restore personal files from your backup
+
+## Common Mistakes
+
+- Formatting the wrong drive (always double-check drive letters and sizes)
+- Not having network drivers ready offline
+- Skipping Windows Update before installing other software
+- Forgetting to back up application settings and license keys
+
+## Verification
+
+- [ ] Windows boots normally
+- [ ] All Windows Updates are installed
+- [ ] Network connectivity works
+- [ ] All personal files are restored
+- [ ] Device Manager shows no missing drivers
+- [ ] Key applications are installed and functional
