@@ -35,24 +35,36 @@ export default async function GuidesPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 text-sm">
-        {["Beginner", "Intermediate", "Advanced"].map((d) => (
-          <a
-            key={d}
-            href={`/guides?difficulty=${d}${query ? `&query=${query}` : ""}`}
-            className={`rounded-full border px-4 py-2 ${difficulty === d ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
-          >
-            {d}
-          </a>
-        ))}
-        {["Windows", "Linux", "macOS", "Any"].map((o) => (
-          <a
-            key={o}
-            href={`/guides?os=${o}${query ? `&query=${query}` : ""}`}
-            className={`rounded-full border px-4 py-2 ${os === o ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
-          >
-            {o}
-          </a>
-        ))}
+        {["Beginner", "Intermediate", "Advanced"].map((d) => {
+          const p = new URLSearchParams();
+          p.set("difficulty", d);
+          if (query) p.set("query", query);
+          if (os) p.set("os", os);
+          return (
+            <a
+              key={d}
+              href={`/guides?${p}`}
+              className={`rounded-full border px-4 py-2 ${difficulty === d ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
+            >
+              {d}
+            </a>
+          );
+        })}
+        {["Windows", "Linux", "macOS", "Any"].map((o) => {
+          const p = new URLSearchParams();
+          p.set("os", o);
+          if (query) p.set("query", query);
+          if (difficulty) p.set("difficulty", difficulty);
+          return (
+            <a
+              key={o}
+              href={`/guides?${p}`}
+              className={`rounded-full border px-4 py-2 ${os === o ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
+            >
+              {o}
+            </a>
+          );
+        })}
         {(difficulty || os || tag) && (
           <a href="/guides" className="rounded-full border border-[var(--danger)]/20 px-4 py-2 text-[var(--danger)]">
             Clear filters
@@ -81,23 +93,34 @@ export default async function GuidesPage({ searchParams }: Props) {
       )}
 
       {/* Pagination */}
-      {result.total > result.limit && (
-        <div className="flex justify-center gap-4 pt-4">
-          {page > 1 && (
-            <a href={`/guides?page=${page - 1}${query ? `&query=${query}` : ""}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">
-              Previous
-            </a>
-          )}
-          <span className="py-2 text-sm text-[var(--muted)]">
-            Page {page} of {Math.ceil(result.total / result.limit)}
-          </span>
-          {page * result.limit < result.total && (
-            <a href={`/guides?page=${page + 1}${query ? `&query=${query}` : ""}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">
-              Next
-            </a>
-          )}
-        </div>
-      )}
+      {result.total > result.limit && (() => {
+        const base = new URLSearchParams();
+        if (query) base.set("query", query);
+        if (difficulty) base.set("difficulty", difficulty);
+        if (os) base.set("os", os);
+        if (tag) base.set("tag", tag);
+        const prevParams = new URLSearchParams(base);
+        prevParams.set("page", String(page - 1));
+        const nextParams = new URLSearchParams(base);
+        nextParams.set("page", String(page + 1));
+        return (
+          <div className="flex justify-center gap-4 pt-4">
+            {page > 1 && (
+              <a href={`/guides?${prevParams}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">
+                Previous
+              </a>
+            )}
+            <span className="py-2 text-sm text-[var(--muted)]">
+              Page {page} of {Math.ceil(result.total / result.limit)}
+            </span>
+            {page * result.limit < result.total && (
+              <a href={`/guides?${nextParams}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">
+                Next
+              </a>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

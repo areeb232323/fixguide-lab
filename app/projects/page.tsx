@@ -37,24 +37,36 @@ export default async function ProjectsPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 text-sm">
-        {["Beginner", "Intermediate", "Advanced"].map((d) => (
-          <a
-            key={d}
-            href={`/projects?difficulty=${d}${query ? `&query=${query}` : ""}`}
-            className={`rounded-full border px-4 py-2 ${difficulty === d ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
-          >
-            {d}
-          </a>
-        ))}
-        {["25", "50", "100"].map((c) => (
-          <a
-            key={c}
-            href={`/projects?costMax=${c}${query ? `&query=${query}` : ""}`}
-            className={`rounded-full border px-4 py-2 ${costMax === c ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
-          >
-            Under ${c}
-          </a>
-        ))}
+        {["Beginner", "Intermediate", "Advanced"].map((d) => {
+          const p = new URLSearchParams();
+          p.set("difficulty", d);
+          if (query) p.set("query", query);
+          if (costMax) p.set("costMax", costMax);
+          return (
+            <a
+              key={d}
+              href={`/projects?${p}`}
+              className={`rounded-full border px-4 py-2 ${difficulty === d ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
+            >
+              {d}
+            </a>
+          );
+        })}
+        {["25", "50", "100"].map((c) => {
+          const p = new URLSearchParams();
+          p.set("costMax", c);
+          if (query) p.set("query", query);
+          if (difficulty) p.set("difficulty", difficulty);
+          return (
+            <a
+              key={c}
+              href={`/projects?${p}`}
+              className={`rounded-full border px-4 py-2 ${costMax === c ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--accent)]"}`}
+            >
+              Under ${c}
+            </a>
+          );
+        })}
         {(difficulty || costMax || tag) && (
           <a href="/projects" className="rounded-full border border-[var(--danger)]/20 px-4 py-2 text-[var(--danger)]">
             Clear filters
@@ -83,17 +95,28 @@ export default async function ProjectsPage({ searchParams }: Props) {
       )}
 
       {/* Pagination */}
-      {result.total > result.limit && (
-        <div className="flex justify-center gap-4 pt-4">
-          {page > 1 && (
-            <a href={`/projects?page=${page - 1}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">Previous</a>
-          )}
-          <span className="py-2 text-sm text-[var(--muted)]">Page {page} of {Math.ceil(result.total / result.limit)}</span>
-          {page * result.limit < result.total && (
-            <a href={`/projects?page=${page + 1}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">Next</a>
-          )}
-        </div>
-      )}
+      {result.total > result.limit && (() => {
+        const base = new URLSearchParams();
+        if (query) base.set("query", query);
+        if (difficulty) base.set("difficulty", difficulty);
+        if (costMax) base.set("costMax", costMax);
+        if (tag) base.set("tag", tag);
+        const prevParams = new URLSearchParams(base);
+        prevParams.set("page", String(page - 1));
+        const nextParams = new URLSearchParams(base);
+        nextParams.set("page", String(page + 1));
+        return (
+          <div className="flex justify-center gap-4 pt-4">
+            {page > 1 && (
+              <a href={`/projects?${prevParams}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">Previous</a>
+            )}
+            <span className="py-2 text-sm text-[var(--muted)]">Page {page} of {Math.ceil(result.total / result.limit)}</span>
+            {page * result.limit < result.total && (
+              <a href={`/projects?${nextParams}`} className="rounded-full border border-[var(--line)] px-5 py-2 text-sm hover:border-[var(--accent)]">Next</a>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { getGuideBySlug } from "@/lib/content";
 import { Breadcrumbs, TestingStatusBadge, DifficultyBadge, DetailMeta, TableOfContents } from "@/components/site-ui";
 import { MdxRenderer } from "@/components/mdx-renderer";
 import { AiChatPanel } from "@/components/ai-chat-panel";
+import { CommentForm } from "@/components/comment-form";
+import { ReportDialog } from "@/components/report-dialog";
 import type { Metadata } from "next";
 
 interface Props {
@@ -50,6 +52,15 @@ export default async function GuideDetailPage({ params }: Props) {
           </aside>
         )}
       </div>
+
+      {/* Community */}
+      <section className="space-y-6 border-t border-[var(--line)] pt-8">
+        <h2 className="text-xl font-semibold">Community Notes</h2>
+        <CommentForm targetType="guide" targetId={guide.id} />
+        <div className="pt-2">
+          <ReportDialog contentType="guide" contentId={guide.id} />
+        </div>
+      </section>
 
       {/* AI Chat */}
       <AiChatPanel contextId={guide.id} contextType="guide" />
