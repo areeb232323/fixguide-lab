@@ -1,0 +1,202 @@
+---
+id: "20000000-0000-4000-8000-000000000006"
+slug: "raspberry-pi-home-server"
+title: "Raspberry Pi Home Server"
+summary: "Build a low-power home server for file sharing, media streaming, and self-hosting with a Raspberry Pi 5."
+difficulty: "Intermediate"
+time_estimate_minutes: 120
+cost_range_min: 76
+cost_range_max: 148
+tags: ["raspberry-pi", "server", "self-hosting", "linux", "networking"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-12T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-01T12:00:00.000Z"
+updated_at: "2026-03-12T12:00:00.000Z"
+kicker: "Self-Hosting Project"
+cover: "/images/projects/pi-server.jpg"
+project_type: "Raspberry Pi"
+---
+
+## Overview
+
+A Raspberry Pi makes an excellent always-on home server that uses only 5–15 watts of power (vs 50–200W for a full PC). This project sets up file sharing (Samba), a media server (Jellyfin), and a reverse proxy (Caddy) — all running on a single Pi.
+
+**What you'll be able to do:**
+- Share files across all devices on your network
+- Stream movies, music, and photos to any device
+- Host personal services (Nextcloud, Home Assistant, etc.)
+- Access your server remotely via a secure tunnel
+
+## Parts Needed
+
+See the parts list below the guide for budget and best-value options with shopping links.
+
+**Budget build** (~$76): Pi 4 2GB + 32GB SD + basic case + power supply
+**Best value build** (~$148): Pi 5 8GB + 128GB SD + Argon ONE case + official PSU
+
+## Step 1: Flash the OS
+
+1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/) (official tool)
+2. Insert your microSD card into your computer
+3. Open Raspberry Pi Imager:
+   - **Choose OS**: Raspberry Pi OS Lite (64-bit) — no desktop needed for a server
+   - **Choose Storage**: Select your microSD card
+   - Click the **gear icon** to pre-configure:
+     - Set hostname (e.g., `piserver`)
+     - Enable SSH
+     - Set username and password
+     - Configure Wi-Fi (if not using Ethernet)
+4. Click **Write** and wait for it to finish
+
+Reference: [Raspberry Pi Documentation](https://www.raspberrypi.com/documentation/) | [r/raspberry_pi](https://www.reddit.com/r/raspberry_pi/)
+
+## Step 2: First Boot & SSH
+
+1. Insert the SD card into the Pi
+2. Connect Ethernet (recommended for servers) and power
+3. Wait 2 minutes for first boot
+4. Find the Pi's IP address:
+   - Check your router's admin page for connected devices
+   - Or scan with: `ping piserver.local` (macOS/Linux) or use [Advanced IP Scanner](https://www.advanced-ip-scanner.com/) (Windows)
+5. SSH into the Pi:
+
+```bash
+ssh username@piserver.local
+# Or: ssh username@192.168.1.xxx
+```
+
+6. Update everything:
+
+```bash
+sudo apt update && sudo apt full-upgrade -y
+sudo reboot
+```
+
+## Step 3: Set Up File Sharing (Samba)
+
+Samba lets you access Pi folders from Windows, macOS, and Linux like a network drive.
+
+```bash
+# Install Samba
+sudo apt install samba samba-common-bin -y
+
+# Create a shared folder
+sudo mkdir -p /srv/shared
+sudo chown -R nobody:nogroup /srv/shared
+sudo chmod 0777 /srv/shared
+
+# Configure Samba
+sudo nano /etc/samba/smb.conf
+```
+
+Add this to the end of `smb.conf`:
+
+```ini
+[Shared]
+   path = /srv/shared
+   browseable = yes
+   read only = no
+   guest ok = yes
+   create mask = 0777
+   directory mask = 0777
+```
+
+```bash
+# Restart Samba
+sudo systemctl restart smbd
+
+# Access from Windows: \\piserver.local\Shared
+# Access from macOS: Finder → Go → Connect to Server → smb://piserver.local
+```
+
+Reference: [Raspberry Pi Samba Guide](https://www.raspberrypi.com/documentation/computers/remote-access.html#samba) | [Samba Official Wiki](https://wiki.samba.org/)
+
+## Step 4: Install Jellyfin (Media Server)
+
+[Jellyfin](https://jellyfin.org/) is a free, open-source media server (like Plex, but no account required).
+
+```bash
+# Add Jellyfin repository
+curl https://repo.jellyfin.org/install-debuntu.sh | sudo bash
+
+# Start Jellyfin
+sudo systemctl enable jellyfin
+sudo systemctl start jellyfin
+```
+
+1. Open a browser and go to `http://piserver.local:8096`
+2. Follow the setup wizard:
+   - Create an admin account
+   - Add your media library (point to `/srv/shared/Movies`, `/srv/shared/Music`, etc.)
+3. Install the Jellyfin app on your phone/TV:
+   - [Android](https://play.google.com/store/apps/details?id=org.jellyfin.mobile)
+   - [iOS](https://apps.apple.com/app/jellyfin-mobile/id1480732557)
+   - Most smart TVs have a Jellyfin app in their app store
+
+Reference: [Jellyfin Docs](https://jellyfin.org/docs/) | [r/jellyfin](https://www.reddit.com/r/jellyfin/) | [GitHub — jellyfin/jellyfin](https://github.com/jellyfin/jellyfin)
+
+## Step 5: External Storage (Optional but Recommended)
+
+A microSD card is fine for the OS, but use an external drive for media storage:
+
+| Drive | Type | Price | Link |
+|---|---|---|---|
+| **Seagate Portable 2TB** (budget) | USB HDD | ~$65 | [Amazon.com](https://www.amazon.com/Seagate-Portable-External-Hard-Drive/dp/B07CRG94G3) |
+| **Samsung T7 1TB** (best) | USB SSD | ~$90 | [Amazon.com](https://www.amazon.com/SAMSUNG-Portable-SSD-1TB-MU-PC1T0T/dp/B0874XN4D8) |
+| **WD Elements 4TB** (best value) | USB HDD | ~$95 | [Amazon.ca](https://www.amazon.ca/Western-Digital-Elements-Portable-External/dp/B0B3RDG6Y9) |
+
+```bash
+# Mount the external drive
+sudo mkdir /mnt/storage
+sudo mount /dev/sda1 /mnt/storage
+
+# Auto-mount on boot — add to /etc/fstab:
+# /dev/sda1 /mnt/storage ext4 defaults,nofail 0 2
+```
+
+## Step 6: Security Hardening
+
+```bash
+# Set up firewall
+sudo apt install ufw -y
+sudo ufw allow ssh
+sudo ufw allow samba
+sudo ufw allow 8096/tcp  # Jellyfin
+sudo ufw enable
+
+# Disable password auth (use SSH keys instead)
+ssh-keygen -t ed25519  # On your local machine
+ssh-copy-id username@piserver.local
+```
+
+Reference: [Raspberry Pi Security Guide](https://www.raspberrypi.com/documentation/computers/configuration.html#securing-your-raspberry-pi)
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| Can't find Pi on network | Check router DHCP list, or connect a monitor to see the IP |
+| Samba share not visible on Windows | Run `\\piserver.local\Shared` in File Explorer address bar |
+| Jellyfin video buffering | Use Ethernet instead of Wi-Fi, or transcode to lower quality |
+| SD card corruption | Use a high-endurance card (Samsung PRO Endurance), or boot from USB/SSD |
+| Pi running hot | Install a case with a fan (Argon ONE recommended) |
+
+## Community Resources
+
+- [r/raspberry_pi](https://www.reddit.com/r/raspberry_pi/) — General Pi projects and troubleshooting
+- [r/selfhosted](https://www.reddit.com/r/selfhosted/) — Self-hosting community with excellent guides
+- [r/jellyfin](https://www.reddit.com/r/jellyfin/) — Jellyfin setup and optimization
+- [r/homelab](https://www.reddit.com/r/homelab/) — Home server enthusiasts
+- [Raspberry Pi Forums](https://forums.raspberrypi.com/) — Official community
+- [Awesome Self-Hosted](https://github.com/awesome-selfhosted/awesome-selfhosted) — Curated list of self-hosted software
+
+## Test Procedure
+
+1. SSH into the Pi from another device on the network
+2. Access the Samba share from Windows/macOS and create a test file
+3. Open Jellyfin in a browser and verify media plays
+4. Reboot the Pi and verify all services start automatically
+5. Check CPU temperature: `vcgencmd measure_temp` (should be under 70°C)

@@ -1,0 +1,183 @@
+---
+id: "20000000-0000-4000-8000-000000000007"
+slug: "led-matrix-display"
+title: "LED Matrix Scrolling Display"
+summary: "Build a scrolling text and animation display using a MAX7219 LED dot matrix and Arduino Nano."
+difficulty: "Beginner"
+time_estimate_minutes: 60
+cost_range_min: 9
+cost_range_max: 25
+tags: ["arduino", "led", "display", "beginner", "budget"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-12T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000002"
+published: true
+hidden: false
+created_at: "2026-03-05T12:00:00.000Z"
+updated_at: "2026-03-12T12:00:00.000Z"
+kicker: "Beginner Project"
+cover: "/images/projects/led-matrix.jpg"
+project_type: "Arduino"
+---
+
+## Overview
+
+This project creates a scrolling LED display using a 4-module MAX7219 dot matrix connected to an Arduino Nano. Display custom text, animations, the time, or sensor data — all controlled via the Arduino IDE.
+
+**Great for**: desk displays, event signs, notification boards, learning SPI communication.
+
+## Parts Needed
+
+See the parts list below for budget and best-value options with shopping links.
+
+**Budget build** (~$9): Arduino Nano clone + generic MAX7219 module
+**Best value build** (~$25): Official Arduino Nano Every + quality MAX7219 + USB cable
+
+## Wiring
+
+Connect the MAX7219 module to the Arduino Nano:
+
+| MAX7219 Pin | Arduino Nano Pin |
+|---|---|
+| VCC | 5V |
+| GND | GND |
+| DIN | D11 (MOSI) |
+| CS | D10 |
+| CLK | D13 (SCK) |
+
+> **CURRENT WARNING**: The MAX7219 can draw up to 400mA at full brightness. Power via USB is fine for normal use. If running all LEDs at max brightness, use an external 5V supply.
+
+## Software Setup
+
+### Install the Arduino IDE
+
+1. Download from [arduino.cc/en/software](https://www.arduino.cc/en/software) (free)
+2. Install and open the IDE
+3. Go to **Tools** → **Board** → select **Arduino Nano** (or Nano Every)
+4. Go to **Tools** → **Port** → select the USB port
+
+### Install the Library
+
+1. Go to **Sketch** → **Include Library** → **Manage Libraries**
+2. Search for **"MD_Parola"** by MajicDesigns
+3. Install **MD_Parola** (it will also install **MD_MAX72XX** automatically)
+
+Reference: [MD_Parola GitHub](https://github.com/MajicDesigns/MD_Parola) | [MD_MAX72XX GitHub](https://github.com/MajicDesigns/MD_MAX72XX)
+
+## Code
+
+### Scrolling Text Display
+
+```cpp
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+#include <SPI.h>
+
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
+#define MAX_DEVICES 4    // Number of 8x8 modules
+#define CS_PIN 10
+
+MD_Parola display = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+
+void setup() {
+  display.begin();
+  display.setIntensity(5);  // Brightness 0-15
+  display.displayClear();
+
+  display.displayScroll(
+    "Hello FixGuide Lab!  ",
+    PA_LEFT, PA_SCROLL_LEFT,
+    50  // Speed (lower = faster)
+  );
+}
+
+void loop() {
+  if (display.displayAnimate()) {
+    display.displayReset();
+  }
+}
+```
+
+### Static Text
+
+```cpp
+void setup() {
+  display.begin();
+  display.setIntensity(3);
+  display.setTextAlignment(PA_CENTER);
+  display.print("Hi!");
+}
+
+void loop() {}
+```
+
+### Temperature Display (with DHT11)
+
+Combine this project with the [Arduino Temperature Monitor](/projects/arduino-temperature-monitor):
+
+```cpp
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+#include <SPI.h>
+#include <DHT.h>
+
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
+#define MAX_DEVICES 4
+#define CS_PIN 10
+#define DHTPIN 2
+#define DHTTYPE DHT11
+
+MD_Parola display = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+DHT dht(DHTPIN, DHTTYPE);
+char message[30];
+
+void setup() {
+  display.begin();
+  display.setIntensity(5);
+  dht.begin();
+}
+
+void loop() {
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+
+  if (!isnan(temp)) {
+    snprintf(message, sizeof(message), "%.1fC  %.0f%%", temp, hum);
+    display.setTextAlignment(PA_CENTER);
+    display.print(message);
+  }
+  delay(2000);
+}
+```
+
+## Customization Ideas
+
+- **Clock display**: Add a DS3231 RTC module ([Amazon](https://www.amazon.com/HiLetgo-DS3231-Precision-Module-Arduino/dp/B00LX3V7F0)) for accurate timekeeping
+- **Wi-Fi messages**: Use an ESP32 instead of Arduino to receive text via web interface
+- **Pixel art animations**: Use the MD_Parola sprite animation features
+- **Notification board**: Display RSS feeds, weather, or social media alerts
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| Display shows nothing | Check VCC/GND connections, verify CS pin matches code |
+| Text is mirrored or upside down | Change `HARDWARE_TYPE` — try `FC16_HW`, `PAROLA_HW`, or `GENERIC_HW` |
+| Only first module lights up | Check DIN→DOUT daisy-chain connections between modules |
+| Text is garbled | Verify `MAX_DEVICES` matches your actual number of modules |
+| Display is too dim | Increase `setIntensity()` value (0–15) |
+
+## Community Resources
+
+- [r/arduino](https://www.reddit.com/r/arduino/) — Arduino projects and troubleshooting
+- [Arduino Forum — LEDs and Displays](https://forum.arduino.cc/c/using-arduino/leds-and-multiplexing/10) — Official forum
+- [MD_Parola Examples](https://github.com/MajicDesigns/MD_Parola/tree/main/examples) — Dozens of example sketches
+- [Arduino Project Hub](https://projecthub.arduino.cc/) — Community project gallery
+
+## Test Procedure
+
+1. Upload the scrolling text code and verify text scrolls left-to-right across all 4 modules
+2. Change the text and re-upload to verify updates work
+3. Adjust brightness with `setIntensity()` — verify 0 is dimmest and 15 is brightest
+4. Power cycle the Arduino — display should restart automatically
+5. If using temperature display, verify readings match a known thermometer within ±2°C

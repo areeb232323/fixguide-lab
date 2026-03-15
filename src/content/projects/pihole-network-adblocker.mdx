@@ -1,0 +1,208 @@
+---
+id: "20000000-0000-4000-8000-000000000008"
+slug: "pihole-network-adblocker"
+title: "Pi-hole Network Ad Blocker"
+summary: "Set up a Raspberry Pi as a network-wide DNS ad blocker that protects every device in your home."
+difficulty: "Intermediate"
+time_estimate_minutes: 45
+cost_range_min: 29
+cost_range_max: 72
+tags: ["raspberry-pi", "networking", "security", "dns", "pi-hole"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-12T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-08T12:00:00.000Z"
+updated_at: "2026-03-12T12:00:00.000Z"
+kicker: "Networking Project"
+cover: "/images/projects/pihole.jpg"
+project_type: "Raspberry Pi"
+---
+
+## Overview
+
+[Pi-hole](https://pi-hole.net/) is a DNS sinkhole that blocks ads, trackers, and malicious domains at the network level. Instead of installing ad blockers on every device, Pi-hole blocks requests before they reach any device on your network — including smart TVs, phones, and IoT devices that can't run browser extensions.
+
+**What it blocks:**
+- Ads on websites, apps, and smart TVs
+- Tracking domains (analytics, telemetry)
+- Known malware and phishing domains
+- Crypto mining scripts
+
+**What it doesn't block:**
+- YouTube ads (served from the same domain as videos)
+- Ads inside apps that use their own CDN
+
+## Parts Needed
+
+See the parts list below for budget and best-value options with shopping links.
+
+**Budget build** (~$29): Raspberry Pi Zero 2 W + 32GB SD + power supply
+**Best value build** (~$72): Raspberry Pi 4 2GB + 64GB SD + case + Ethernet adapter
+
+## Step 1: Flash Raspberry Pi OS
+
+1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+2. Flash **Raspberry Pi OS Lite (64-bit)** to your SD card
+3. In the Imager settings (gear icon):
+   - Set hostname: `pihole`
+   - Enable SSH with password authentication
+   - Set username and password
+   - Configure Wi-Fi (if not using Ethernet)
+4. Insert the SD card and boot the Pi
+
+Reference: [Raspberry Pi Documentation](https://www.raspberrypi.com/documentation/)
+
+## Step 2: Set a Static IP
+
+Pi-hole needs a static IP so devices always know where to send DNS queries.
+
+SSH into the Pi and edit the network config:
+
+```bash
+ssh username@pihole.local
+
+# Find your current IP, gateway, and DNS
+ip addr show
+ip route | grep default
+
+# Edit dhcpcd config
+sudo nano /etc/dhcpcd.conf
+```
+
+Add to the end of `dhcpcd.conf`:
+
+```
+interface eth0  # or wlan0 for Wi-Fi
+static ip_address=192.168.1.100/24
+static routers=192.168.1.1
+static domain_name_servers=1.1.1.1 8.8.8.8
+```
+
+```bash
+sudo reboot
+# Reconnect: ssh username@192.168.1.100
+```
+
+## Step 3: Install Pi-hole
+
+Run the official one-line installer:
+
+```bash
+curl -sSL https://install.pi-hole.net | bash
+```
+
+The installer will ask several questions:
+
+1. **Upstream DNS provider**: Choose Cloudflare (1.1.1.1) or Google (8.8.8.8) — this is the DNS Pi-hole uses for non-blocked queries
+2. **Blocklists**: Accept the default StevenBlack list
+3. **Admin Web Interface**: Yes (install)
+4. **Web server**: Yes (install lighttpd)
+5. **Log queries**: Yes
+6. **Privacy mode**: Show everything (for your own network)
+
+**Save the admin password** shown at the end. To change it later:
+
+```bash
+pihole -a -p
+```
+
+Reference: [Pi-hole Official Docs](https://docs.pi-hole.net/) | [GitHub — pi-hole/pi-hole](https://github.com/pi-hole/pi-hole)
+
+## Step 4: Configure Your Router
+
+Tell your router to send all DNS queries to Pi-hole:
+
+1. Open your router admin panel (usually 192.168.1.1)
+2. Find **DHCP** or **DNS** settings
+3. Set the **Primary DNS** to your Pi-hole's IP (e.g., `192.168.1.100`)
+4. **Clear** the secondary DNS (or set it to the same Pi-hole IP)
+5. Save and restart the router
+
+> **Important**: If you set a secondary DNS to a non-Pi-hole address (like 8.8.8.8), devices may bypass Pi-hole entirely.
+
+**If your router doesn't allow custom DNS** (some ISP routers don't):
+- Set DNS per-device instead
+- Or switch your router to bridge mode and use your own router
+
+## Step 5: Add Extra Blocklists
+
+The default list blocks ~100,000 domains. Add more for better coverage:
+
+1. Open the Pi-hole admin panel: `http://192.168.1.100/admin`
+2. Go to **Adlists** → **Add new**
+3. Add these community-maintained lists:
+
+| List | Domains | URL |
+|---|---|---|
+| **StevenBlack Unified** | ~130,000 | `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts` |
+| **OISD (Full)** | ~300,000 | `https://big.oisd.nl/` |
+| **Firebog Tick List** | Various | See [firebog.net](https://firebog.net/) — copy the green "tick" lists |
+
+4. Go to **Tools** → **Update Gravity** to apply
+
+Reference: [r/pihole — Recommended Blocklists](https://www.reddit.com/r/pihole/comments/bppk1n/suggested_block_lists/) | [Firebog Blocklist Collection](https://firebog.net/)
+
+## Step 6: Whitelist Essential Domains
+
+Some services break with aggressive blocking. Common whitelists:
+
+```bash
+# Microsoft services
+pihole -w login.microsoftonline.com
+pihole -w clientconfig.passport.net
+
+# Apple services
+pihole -w apple.com
+pihole -w icloud.com
+
+# Captive portal detection (Wi-Fi login pages)
+pihole -w connectivitycheck.gstatic.com
+pihole -w captive.apple.com
+```
+
+Or use the community whitelist: [anudeepND/whitelist](https://github.com/anudeepND/whitelist) on GitHub.
+
+## Step 7: Monitoring
+
+### Pi-hole Dashboard
+
+Open `http://192.168.1.100/admin` to see:
+- Total queries today
+- Queries blocked (percentage)
+- Top blocked domains
+- Top clients (which devices query the most)
+
+### Check If It's Working
+
+1. Open any website — you should notice fewer ads
+2. Visit [ads-blocker.com](https://ads-blocker.com/testing/) — it should detect your ad blocker
+3. Check the Pi-hole dashboard — queries should be flowing in
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| Some devices still show ads | Check that the device is using Pi-hole as DNS (not hardcoded to 8.8.8.8). Some smart TVs hardcode Google DNS. |
+| Website not loading | Add the domain to Pi-hole's whitelist: `pihole -w domain.com` |
+| Pi-hole admin panel not accessible | Verify Pi-hole service is running: `pihole status` |
+| Slow DNS resolution | Pi-hole on Pi Zero can be slow — upgrade to Pi 4 for better performance |
+| YouTube ads still showing | YouTube serves ads from the same CDN as videos — DNS blocking can't distinguish them. Use uBlock Origin in the browser. |
+
+## Community Resources
+
+- [r/pihole](https://www.reddit.com/r/pihole/) — Active community with setup help, blocklists, and tips
+- [Pi-hole Discourse](https://discourse.pi-hole.net/) — Official support forum
+- [Pi-hole GitHub](https://github.com/pi-hole/pi-hole) — Source code, issues, and development
+- [r/HomeNetworking](https://www.reddit.com/r/HomeNetworking/) — Network setup help
+- [Firebog](https://firebog.net/) — Curated blocklist collection
+
+## Test Procedure
+
+1. Open the Pi-hole admin dashboard and verify queries are being logged
+2. Visit a website with ads (e.g., a news site) — most display ads should be gone
+3. Check that streaming services (Netflix, YouTube) still work
+4. Run `dig google.com @192.168.1.100` to verify DNS resolution works
+5. Reboot the Pi and verify Pi-hole starts automatically
+6. Monitor for 24 hours — check the dashboard for blocked percentage (typically 15–30%)

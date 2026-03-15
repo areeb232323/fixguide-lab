@@ -73,7 +73,13 @@ export default async function ProjectDetailPage({ params }: Props) {
                   <tbody>
                     {parts.map((part) => (
                       <tr key={part.id} className="border-b border-[var(--line)]">
-                        <td className="py-3 pr-4 font-medium">{part.name}</td>
+                        <td className="py-3 pr-4 font-medium">
+                          {part.url ? (
+                            <a href={part.url} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2 hover:opacity-80">
+                              {part.name} &#8599;
+                            </a>
+                          ) : part.name}
+                        </td>
                         <td className="py-3 pr-4 text-[var(--muted)]">{part.description}</td>
                         <td className="py-3 pr-4 text-right">${part.price_budget}</td>
                         <td className="py-3 text-right">${part.price_best}</td>

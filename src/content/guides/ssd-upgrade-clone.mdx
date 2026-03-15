@@ -1,0 +1,240 @@
+---
+id: "10000000-0000-4000-8000-000000000007"
+slug: "ssd-upgrade-clone"
+title: "SSD Upgrade & Disk Cloning Guide"
+summary: "Upgrade from HDD to SSD or clone your existing drive to a larger SSD without reinstalling Windows or Linux."
+difficulty: "Intermediate"
+time_estimate_minutes: 90
+os: "Any"
+tags: ["ssd", "hardware", "upgrade", "cloning", "storage"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-12T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-05T12:00:00.000Z"
+updated_at: "2026-03-12T12:00:00.000Z"
+kicker: "Hardware Upgrade"
+cover: "/images/guides/ssd-upgrade.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Identify your laptop/desktop's drive interface (SATA or NVMe M.2)
+- [ ] Purchase a compatible SSD (see recommendations below)
+- [ ] Back up ALL important data to an external drive
+- [ ] Have a USB-to-SATA adapter or NVMe enclosure for cloning
+- [ ] Download cloning software (see Step 3)
+- [ ] Charge laptop to 100% or connect desktop to UPS
+
+> **DATA LOSS RISK**: Cloning can fail if interrupted. Always have a complete backup before starting. If the clone fails, your original drive is untouched — you can try again.
+
+## Choosing the Right SSD
+
+### SATA SSDs (2.5-inch) — For older laptops and desktops
+
+| SSD | Capacity | Price (USD) | Link |
+|---|---|---|---|
+| **Kingston A400** (budget) | 480 GB | ~$30 | [Amazon.com](https://www.amazon.com/Kingston-480GB-Solid-SA400S37-480G/dp/B01N0TQPQB) |
+| **Samsung 870 EVO** (best) | 500 GB | ~$45 | [Amazon.com](https://www.amazon.com/Samsung-500GB-Internal-MZ-77E500B-AM/dp/B08QBMD6P4) |
+| **Crucial MX500** (best value) | 1 TB | ~$65 | [Amazon.com](https://www.amazon.com/Crucial-MX500-NAND-SATA-Internal/dp/B078211KBB) |
+| **Samsung 870 EVO** (best) | 1 TB | ~$80 | [Amazon.ca](https://www.amazon.ca/Samsung-Internal-MZ-77E1T0B-AM/dp/B08QBJ2YMG) |
+
+### NVMe M.2 SSDs — For modern laptops and desktops (much faster)
+
+| SSD | Capacity | Speed | Price (USD) | Link |
+|---|---|---|---|---|
+| **Kingston NV2** (budget) | 500 GB | 3,500 MB/s | ~$32 | [Amazon.com](https://www.amazon.com/Kingston-Internal-NVMe-PCIe-SNV2S/dp/B0BDTBTQ4L) |
+| **WD Black SN770** (mid) | 1 TB | 5,150 MB/s | ~$60 | [Amazon.com](https://www.amazon.com/WD_BLACK-SN770-Internal-Gaming-Solid/dp/B09QV5KJHV) |
+| **Samsung 990 PRO** (best) | 1 TB | 7,450 MB/s | ~$90 | [Amazon.com](https://www.amazon.com/SAMSUNG-Internal-Expansion-MZ-V9P1T0B-AM/dp/B0CHGT4KLH) |
+| **Samsung 990 PRO** (best) | 2 TB | 7,450 MB/s | ~$150 | [Amazon.ca](https://www.amazon.ca/Samsung-Internal-Expansion-MZ-V9P2T0B-AM/dp/B0CHGS1WZB) |
+
+**How to check your interface type:**
+- **Windows**: Open Device Manager → Disk drives → Google your drive model
+- **Linux**: Run `lsblk -d -o NAME,ROTA,TRAN` — look for `sata` or `nvme`
+- **Physical check**: Open the back panel and look at the connector
+
+Reference: [r/buildapc — SSD Buying Guide](https://www.reddit.com/r/buildapc/wiki/index) | [Tom's Hardware — Best SSDs](https://www.tomshardware.com/reviews/best-ssds,3891.html)
+
+## Step 1: Prepare the New SSD
+
+### Desktop — Connect Internally
+
+1. Power off and unplug
+2. Open the case
+3. **SATA SSD**: Connect a SATA data cable and SATA power cable to an empty slot
+4. **NVMe SSD**: Insert into an empty M.2 slot and secure with the screw
+5. Power on — the new drive should appear in Disk Management (Windows) or `lsblk` (Linux)
+
+### Laptop — Use an External Enclosure
+
+Since most laptops have only one drive slot, you need a USB enclosure to clone before swapping:
+
+| Enclosure Type | Recommendation | Link |
+|---|---|---|
+| **USB to SATA** (2.5") | UGREEN USB 3.0 enclosure | [Amazon.com](https://www.amazon.com/UGREEN-Enclosure-External-Tool-Free-Adapter/dp/B076WQHK2G) |
+| **USB to NVMe M.2** | UGREEN NVMe enclosure | [Amazon.com](https://www.amazon.com/UGREEN-Enclosure-Tool-Free-Thunderbolt-Compatible/dp/B0BG4NKL9K) |
+
+1. Insert the new SSD into the enclosure
+2. Plug the enclosure into your laptop via USB
+3. The drive should appear as a new disk
+
+## Step 2: Initialize the New SSD
+
+### Windows
+
+1. Press **Win + X** → **Disk Management**
+2. The new SSD should appear as "Not Initialized"
+3. Right-click → **Initialize Disk**
+4. Choose **GPT** (for UEFI systems) or **MBR** (for Legacy BIOS)
+5. Do NOT create any partitions — the cloning software will handle it
+
+### Linux
+
+The cloning tool handles initialization automatically. Just verify the drive is detected:
+
+```bash
+sudo fdisk -l   # List all drives
+lsblk            # Tree view of block devices
+```
+
+## Step 3: Clone Your Drive
+
+### Recommended Cloning Tools
+
+| Tool | Platform | Price | Link |
+|---|---|---|---|
+| **Clonezilla** | Any (bootable USB) | Free, open-source | [clonezilla.org](https://clonezilla.org/) |
+| **Macrium Reflect Free** | Windows | Free | [macrium.com/reflectfree](https://www.macrium.com/reflectfree) |
+| **Samsung Data Migration** | Windows (Samsung SSDs only) | Free | [samsung.com/semiconductor/minisite/ssd/download/tools](https://semiconductor.samsung.com/consumer-storage/support/tools/) |
+| **Crucial Acronis True Image** | Windows (Crucial SSDs only) | Free | [crucial.com/support/ssd](https://www.crucial.com/support/ssd) |
+| **GParted Live** | Any (bootable USB) | Free, open-source | [gparted.org/livecd.php](https://gparted.org/livecd.php) |
+| **dd** | Linux | Built-in | Terminal command |
+
+### Cloning with Macrium Reflect (Windows — Easiest)
+
+1. Download and install [Macrium Reflect Free](https://www.macrium.com/reflectfree)
+2. Open Macrium Reflect
+3. Select your **source disk** (the one with Windows on it)
+4. Click **"Clone this disk"**
+5. Select the **destination disk** (your new SSD)
+6. Macrium will map partitions automatically — verify the layout looks correct
+7. Click **Finish** → **OK** to start cloning
+8. Wait for the clone to complete (15–60 minutes depending on data size)
+
+### Cloning with Clonezilla (Any OS — Advanced)
+
+1. Download [Clonezilla Live](https://clonezilla.org/downloads.php)
+2. Flash it to a USB drive using [Rufus](https://github.com/pbatard/rufus/releases) or [Balena Etcher](https://github.com/balena-io/etcher/releases)
+3. Boot from the USB
+4. Choose **device-device** → **Beginner** → **disk_to_local_disk**
+5. Select source disk → select destination disk
+6. Confirm and wait
+
+### Cloning with dd (Linux — Expert)
+
+```bash
+# DANGER: dd will overwrite the destination without warning
+# Triple-check your source (if=) and destination (of=) drives
+
+# Identify drives
+lsblk
+
+# Clone (replace sdX with source, sdY with destination)
+sudo dd if=/dev/sdX of=/dev/sdY bs=64K conv=noerror,sync status=progress
+
+# After cloning, resize the partition to fill the new SSD
+sudo parted /dev/sdY resizepart [partition_number] 100%
+sudo resize2fs /dev/sdY[partition_number]
+```
+
+> **CRITICAL**: Getting `if` and `of` backwards will **destroy your original drive**. Always verify drive letters with `lsblk` first.
+
+## Step 4: Swap the Drive
+
+### Desktop
+
+1. Power off and unplug
+2. Disconnect the old drive
+3. If you used a USB enclosure, install the new SSD internally
+4. Boot and verify Windows/Linux loads from the new SSD
+
+### Laptop
+
+1. Power off
+2. Remove the back panel (check [iFixit](https://www.ifixit.com/) for your laptop model)
+3. Remove the old drive (note the connector orientation)
+4. Install the new SSD in the same slot
+5. Replace the back panel
+6. Boot and verify
+
+Reference: [iFixit SSD Installation Guides](https://www.ifixit.com/Search?query=ssd+install)
+
+## Step 5: Post-Clone Verification
+
+### Verify Drive Health
+
+**Windows — CrystalDiskInfo** (free):
+- Download from [crystalmark.info](https://crystalmark.info/en/software/crystaldiskinfo/)
+- Should show "Good" status with temperature and health metrics
+
+**Linux:**
+```bash
+sudo smartctl -a /dev/sdX   # Install with: sudo apt install smartmontools
+```
+
+### Benchmark Your New SSD
+
+**Windows — CrystalDiskMark** (free):
+- Download from [crystalmark.info](https://crystalmark.info/en/software/crystaldiskmark/)
+- Sequential read should be 500+ MB/s (SATA) or 3000+ MB/s (NVMe)
+
+**Linux:**
+```bash
+sudo hdparm -Tt /dev/sdX
+```
+
+### Enable TRIM (if not already enabled)
+
+**Windows**: TRIM is enabled by default for SSDs. Verify: `fsutil behavior query DisableDeleteNotify` (should show 0)
+
+**Linux**: Add `discard` to your fstab entry, or enable the fstrim timer:
+```bash
+sudo systemctl enable fstrim.timer
+sudo systemctl start fstrim.timer
+```
+
+## What to Do with the Old Drive
+
+- **Keep it as a backup** — put it in the USB enclosure and store it
+- **Wipe it securely** before selling/donating:
+  - Windows: Use [Eraser](https://eraser.heidi.ie/) or `cipher /w:C:\`
+  - Linux: `sudo shred -vfz -n 1 /dev/sdX`
+- **Use it as secondary storage** — install it as a second drive for documents/games
+
+## Community Resources
+
+- [r/buildapc](https://www.reddit.com/r/buildapc/) — SSD recommendations and installation help
+- [r/NewMaxx SSD Guide](https://www.reddit.com/r/NewMaxx/) — In-depth SSD reviews and buying guides
+- [Tom's Hardware — Best SSDs](https://www.tomshardware.com/reviews/best-ssds,3891.html) — Updated monthly
+- [iFixit](https://www.ifixit.com/) — Laptop-specific teardown and installation guides
+- [UserBenchmark](https://www.userbenchmark.com/) — Compare SSD performance
+
+## Common Mistakes
+
+- Buying NVMe when your laptop only has SATA (or vice versa)
+- Not initializing the new SSD before cloning
+- Getting source and destination backwards in dd (destroys your data)
+- Forgetting to enable TRIM on Linux
+- Not backing up before cloning (clone can fail)
+- Buying a cheap no-name SSD (high failure rates — stick to Samsung, Crucial, WD, Kingston)
+
+## Verification
+
+- [ ] New SSD is detected in BIOS/UEFI
+- [ ] Operating system boots from the new SSD
+- [ ] All files and applications are intact
+- [ ] Drive health shows "Good" in CrystalDiskInfo or smartctl
+- [ ] Benchmark shows expected speeds for your SSD type
+- [ ] TRIM is enabled
+- [ ] Old drive is safely stored or securely wiped
