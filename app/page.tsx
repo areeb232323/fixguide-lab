@@ -103,6 +103,16 @@ export default async function Home() {
             </li>
           ))}
         </ul>
+        <div className="mt-6 text-center">
+          <a
+            href="https://discord.gg/esbDdmuX"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full bg-[#5865F2] px-6 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+          >
+            Join our Discord
+          </a>
+        </div>
       </section>
     </div>
   );

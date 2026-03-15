@@ -91,10 +91,18 @@ export default function AboutPage() {
         </section>
 
         <section>
+          <h2 className="text-2xl font-semibold">Join the Community</h2>
+          <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+            Join our <a href="https://discord.gg/esbDdmuX" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2 hover:opacity-80">Discord server</a> to
+            get help, share your builds, and connect with other members.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-2xl font-semibold">Contact</h2>
           <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
             Found an issue? Have a suggestion? Use the community notes on any guide or
-            project to share feedback, or reach out via our GitHub repository.
+            project to share feedback, or reach out via our <a href="https://discord.gg/esbDdmuX" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2 hover:opacity-80">Discord</a>.
           </p>
         </section>
       </div>

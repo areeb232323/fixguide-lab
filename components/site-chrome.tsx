@@ -88,6 +88,7 @@ export function SiteFooter() {
               <li><Link href="/code-of-conduct" className="hover:text-[var(--accent)]">Code of conduct</Link></li>
               <li><Link href="/signin" className="hover:text-[var(--accent)]">Sign in</Link></li>
               <li><Link href="/contribute" className="hover:text-[var(--accent)]">Submit a draft</Link></li>
+              <li><a href="https://discord.gg/esbDdmuX" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--accent)]">Discord</a></li>
             </ul>
           </div>
         </div>
