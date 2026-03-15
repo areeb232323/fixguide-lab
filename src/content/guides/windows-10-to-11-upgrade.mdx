@@ -1,0 +1,203 @@
+---
+id: "10000000-0000-4000-8000-000000000010"
+slug: "windows-10-to-11-upgrade"
+title: "Windows 10 to Windows 11 Upgrade Guide"
+summary: "Upgrade from Windows 10 to 11 with compatibility checks, TPM requirements, and rollback options. Includes bypass methods for unsupported hardware."
+difficulty: "Beginner"
+time_estimate_minutes: 60
+os: "Windows"
+tags: ["windows", "upgrade", "windows-11", "tpm"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-14T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-10T12:00:00.000Z"
+updated_at: "2026-03-14T12:00:00.000Z"
+kicker: "OS Upgrade"
+cover: "/images/guides/win10-to-11.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Back up all important files to an external drive or cloud
+- [ ] Check Windows 10 is fully updated (Settings → Windows Update)
+- [ ] Note your Windows edition (Home or Pro) and product key
+- [ ] Have at least 64 GB free space on your system drive
+- [ ] Plug in your laptop charger or connect your desktop to power
+- [ ] Close all running applications
+
+> **IMPORTANT**: While the upgrade preserves your files and apps, there is always a small risk of data loss during a major OS upgrade. A backup is not optional — it is required.
+
+## Windows 11 System Requirements
+
+| Requirement | Minimum | How to Check |
+|---|---|---|
+| Processor | 1 GHz, 2+ cores, 64-bit | Settings → System → About |
+| RAM | 4 GB | Settings → System → About |
+| Storage | 64 GB | File Explorer → This PC |
+| UEFI firmware | Required (not Legacy BIOS) | See [BIOS Reference](/guides/bios-keys-master-reference) |
+| TPM | Version 2.0 | See "Check TPM" below |
+| Secure Boot | Capable | BIOS settings |
+| Display | 720p, 9" or larger | — |
+| Internet | Required for setup | — |
+
+### Check TPM (Trusted Platform Module)
+
+1. Press **Win + R** → type `tpm.msc` → Enter
+2. Look for **"The TPM is ready for use"** and **Specification Version: 2.0**
+3. If it says "Compatible TPM cannot be found":
+   - It might be disabled in BIOS — see "Enable TPM in BIOS" below
+   - Your CPU might not support it — see "Unsupported Hardware" section
+
+### Enable TPM in BIOS
+
+TPM is disabled by default on many motherboards:
+
+| Manufacturer | BIOS Setting Name | Location |
+|---|---|---|
+| **Intel** (most boards) | **Intel PTT** (Platform Trust Technology) | Advanced → PCH-FW Configuration → PTT → Enable |
+| **AMD** (most boards) | **fTPM** | Advanced → AMD fTPM Configuration → Enable |
+| **ASUS** | Intel PTT or AMD fTPM | Advanced → Trusted Computing |
+| **MSI** | Security Device Support | Settings → Security → Trusted Computing |
+| **Gigabyte** | Intel PTT or AMD fTPM | Settings → Miscellaneous → Intel PTT / AMD CPU fTPM |
+| **ASRock** | Intel PTT or AMD fTPM | Security → Intel PTT / AMD fTPM |
+
+After enabling TPM:
+1. Save and exit BIOS
+2. Boot into Windows
+3. Run `tpm.msc` again to verify it shows version 2.0
+
+### Run the Official Compatibility Check
+
+Download the [PC Health Check app](https://www.microsoft.com/en-us/windows/windows-11#pchealthcheck) from Microsoft to see if your PC meets all requirements.
+
+Reference: [Microsoft — Windows 11 Specs](https://www.microsoft.com/en-us/windows/windows-11-specifications)
+
+## Method 1: In-Place Upgrade (Recommended)
+
+This keeps all your files, apps, and settings. It's the safest upgrade path.
+
+### Via Windows Update
+
+1. Open **Settings** → **Windows Update**
+2. If eligible, you'll see **"Upgrade to Windows 11 is ready"**
+3. Click **"Download and install"**
+4. Wait for the download (2–5 GB)
+5. Click **"Restart now"** when prompted
+6. The upgrade takes 30–90 minutes with several restarts
+
+### Via Installation Assistant (if Windows Update doesn't offer it)
+
+1. Go to [microsoft.com/software-download/windows11](https://www.microsoft.com/en-us/software-download/windows11)
+2. Under **"Windows 11 Installation Assistant"**, click **Download Now**
+3. Run the assistant
+4. Accept the license terms
+5. The assistant will download and install Windows 11 automatically
+
+### Via ISO (Most Control)
+
+1. Download the **Windows 11 ISO** from [microsoft.com/software-download/windows11](https://www.microsoft.com/en-us/software-download/windows11)
+2. Double-click the ISO to mount it
+3. Run **setup.exe** from the mounted drive
+4. Choose **"Keep personal files and apps"**
+5. Follow the prompts
+
+## Method 2: Clean Install
+
+If you want a fresh start, see our [Clean Windows Installation Guide](/guides/clean-windows-install). This erases everything and installs Windows 11 from scratch.
+
+## Method 3: Unsupported Hardware (TPM/CPU Bypass)
+
+> **WARNING**: Microsoft does not officially support Windows 11 on unsupported hardware. You may not receive future updates. Your PC will not be bricked, but Microsoft could restrict updates in the future. Proceed at your own risk.
+
+### Bypass via Rufus (Easiest)
+
+1. Download Windows 11 ISO from [Microsoft](https://www.microsoft.com/en-us/software-download/windows11)
+2. Download [Rufus](https://github.com/pbatard/rufus/releases) from GitHub
+3. Create bootable USB with Rufus
+4. When the Windows User Experience dialog appears, check:
+   - **Remove requirement for 4GB+ RAM, Secure Boot and TPM 2.0**
+   - **Remove requirement for an online Microsoft account**
+5. Install from the USB as normal
+
+### Bypass via Registry (During Install)
+
+If you're already at the "This PC can't run Windows 11" error screen:
+
+1. Press **Shift + F10** to open Command Prompt
+2. Type `regedit` and press Enter
+3. Navigate to `HKEY_LOCAL_MACHINE\SYSTEM\Setup`
+4. Right-click **Setup** → New → Key → name it **LabConfig**
+5. Inside LabConfig, create these DWORD (32-bit) values:
+   - **BypassTPMCheck** = 1
+   - **BypassSecureBootCheck** = 1
+   - **BypassRAMCheck** = 1
+6. Close Registry Editor and Command Prompt
+7. Click the back arrow in the installer and try again
+
+Reference: [r/Windows11 — Bypass Guide](https://www.reddit.com/r/Windows11/) | [Tom's Hardware — Install on Unsupported PC](https://www.tomshardware.com/how-to/install-windows-11-unsupported-hardware)
+
+## Rollback to Windows 10
+
+If something goes wrong or you don't like Windows 11, you can go back within 10 days:
+
+1. Open **Settings** → **System** → **Recovery**
+2. Click **"Go back"** under "Previous version of Windows"
+3. Follow the prompts
+4. Windows 10 will be restored with your files intact
+
+> **10-DAY LIMIT**: After 10 days, the rollback option disappears because Windows deletes the old Windows.old folder. If you think you might want to go back, don't wait.
+
+### Extend the Rollback Period
+
+Run this in an **elevated Command Prompt** within the first 10 days:
+
+```cmd
+DISM /Online /Set-OSUninstallWindow /Value:60
+```
+
+This extends the rollback period to 60 days.
+
+### If the 10-Day Window Has Passed
+
+Your only option is a [Clean Windows 10 Install](/guides/clean-windows-install) using the Windows 10 ISO from [Microsoft](https://www.microsoft.com/en-us/software-download/windows10).
+
+## Common Problems After Upgrade
+
+| Problem | Solution |
+|---|---|
+| Start menu not working | Run `Get-AppxPackage -AllUsers \| Foreach {Add-AppxPackage -Register "$($_.InstallLocation)\AppXManifest.xml" -DisableDevelopmentMode}` in PowerShell as admin |
+| Taskbar icons missing | Right-click taskbar → Taskbar settings → toggle items on |
+| Wi-Fi not working | Update network driver from manufacturer's site |
+| Printer not working | Remove and re-add the printer in Settings → Bluetooth & devices → Printers |
+| Blue screen after upgrade | Boot into Safe Mode → uninstall recent driver updates |
+| Apps not compatible | Check for app updates, or run in compatibility mode (right-click → Properties → Compatibility) |
+| PC slower than before | Wait 24 hours for indexing to finish. Check Task Manager for high disk/CPU usage. |
+| Right-click menu different | Right-click → "Show more options" for the classic menu, or set registry key to restore old menu |
+| File Explorer slow | Close tabs, or revert to Windows 10 explorer via registry |
+
+## Windows 11 Tips for Windows 10 Users
+
+- **Right-click menu**: The new context menu hides options. Click "Show more options" or press **Shift + F10** for the full menu.
+- **Taskbar**: Can't be moved to top/sides anymore. It's always at the bottom.
+- **Start Menu**: Centered by default. Move it left: Settings → Personalization → Taskbar → Taskbar behaviors → Left.
+- **Widgets**: Press **Win + W** to open. Disable in Taskbar settings if unwanted.
+- **Snap Layouts**: Hover over the maximize button to see snap options, or press **Win + Z**.
+
+## Community Resources
+
+- [r/Windows11](https://www.reddit.com/r/Windows11/) — Tips, news, and troubleshooting
+- [r/WindowsHelp](https://www.reddit.com/r/WindowsHelp/) — Dedicated help community
+- [Microsoft Community](https://answers.microsoft.com/) — Official forums
+- [Neowin](https://www.neowin.net/) — Windows news and guides
+- [Windows Latest](https://www.windowslatest.com/) — Update tracking and bug reports
+
+## Verification
+
+- [ ] Windows 11 installed and boots correctly
+- [ ] All files and applications are intact
+- [ ] Network connectivity works (Wi-Fi/Ethernet)
+- [ ] Windows Update shows no pending critical updates
+- [ ] TPM 2.0 and Secure Boot are enabled (for supported hardware)
+- [ ] Rollback option is available in Recovery settings (within 10 days)

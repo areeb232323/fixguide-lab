@@ -1,0 +1,577 @@
+---
+id: "10000000-0000-4000-8000-000000000014"
+slug: "os-boot-troubleshooting"
+title: "OS Boot Troubleshooting & Repair Guide"
+summary: "Fix boot failures on Windows, Linux, and macOS. Covers black screens, blue screens, GRUB rescue, bootloader repair, and recovery environments."
+difficulty: "Advanced"
+time_estimate_minutes: 45
+os: "Any"
+tags: ["boot", "troubleshooting", "repair", "grub", "bootloader", "bsod", "recovery"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-14T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-14T12:00:00.000Z"
+updated_at: "2026-03-14T12:00:00.000Z"
+kicker: "Troubleshooting"
+cover: "/images/guides/boot-troubleshoot.jpg"
+---
+
+## Quick Diagnosis — What Do You See?
+
+Find your symptom and jump to the right section:
+
+| What You See | Likely Cause | Jump To |
+|---|---|---|
+| **Nothing at all** (no lights, no fans) | Power issue or dead motherboard | [No Power](#no-power-at-all) |
+| **Fans spin but no display** | RAM, GPU, or display connection issue | [No Display](#fans-spin-but-no-display) |
+| **Manufacturer logo then black** | Bootloader missing or corrupt | [Bootloader Repair](#bootloader-repair) |
+| **"No bootable device"** or **"Boot device not found"** | Drive not detected or boot order wrong | [No Boot Device](#no-bootable-device-found) |
+| **Windows blue screen (BSOD)** | Driver, update, or hardware failure | [Windows BSOD](#windows-blue-screen-bsod) |
+| **Windows spinning dots forever** | Stuck update or corrupt system files | [Windows Stuck Boot](#windows-stuck-at-loading) |
+| **Windows automatic repair loop** | System file corruption | [Repair Loop](#windows-automatic-repair-loop) |
+| **GRUB rescue prompt** | Linux partition deleted or moved | [GRUB Rescue](#grub-rescue) |
+| **"error: unknown filesystem"** | GRUB can't find Linux partition | [GRUB Errors](#grub-errors) |
+| **Linux kernel panic** | Kernel or driver issue | [Linux Kernel Panic](#linux-kernel-panic) |
+| **macOS prohibitory symbol (🚫)** | macOS can't find system files | [macOS Recovery](#macos-boot-issues) |
+| **macOS flashing question mark folder** | Startup disk not found | [macOS Recovery](#macos-boot-issues) |
+| **Dual boot — one OS missing** | Bootloader not detecting the other OS | [Dual Boot Issues](#dual-boot-issues) |
+| **BitLocker recovery screen** | Secure Boot or TPM changed | [BitLocker Recovery](#bitlocker-recovery-screen) |
+
+## No Power At All
+
+If pressing the power button does nothing:
+
+1. **Check the power cable** — try a different outlet
+2. **Laptop**: Hold the power button for 30 seconds to drain static, then try again
+3. **Desktop**: Check the PSU switch on the back (I/O switch)
+4. **Desktop**: Verify the 24-pin ATX and 8-pin CPU power cables are seated
+5. **Try a different power cable/charger**
+6. **Remove battery** (laptop, if removable): Power on with just the charger
+7. **Reset CMOS**: Remove the CMOS battery for 60 seconds, then replace it
+
+If still nothing: likely a dead PSU (desktop) or dead motherboard. See our [BIOS/UEFI Recovery Guide](/guides/bios-uefi-recovery).
+
+## Fans Spin But No Display
+
+The PC turns on (lights, fans) but the screen stays black:
+
+1. **Check display connection**: Try a different cable (HDMI, DisplayPort, VGA), different port, or different monitor
+2. **Laptop**: Try an external monitor to rule out a broken screen
+3. **Discrete GPU**: Connect the monitor to the **motherboard** video output (not the graphics card) to test
+4. **Reseat RAM**: Power off → open case → remove RAM sticks → reseat them firmly
+5. **Try one RAM stick at a time** in the first slot (eliminates dead RAM)
+6. **Listen for beep codes** or check motherboard debug LEDs:
+
+| Beep Pattern | Meaning |
+|---|---|
+| 1 short | Normal POST (all good) |
+| 1 long + 2 short | GPU not detected |
+| 3 short | RAM error |
+| Continuous | RAM not seated or failed |
+| No beeps (but no display) | CPU or motherboard issue |
+
+**Modern motherboard debug LEDs** (ASUS, MSI, Gigabyte, ASRock): Look for a small LED labeled **CPU**, **DRAM**, **VGA**, or **BOOT** — whichever stays lit indicates the problem component.
+
+Reference: [r/buildapc — No Display Troubleshooting](https://www.reddit.com/r/buildapc/) | [Tom's Hardware — No POST Guide](https://forums.tomshardware.com/)
+
+## No Bootable Device Found
+
+Messages like "No bootable device", "Boot device not found", "Reboot and select proper boot device":
+
+### Check 1: Boot Order in BIOS
+
+1. Enter BIOS (see our [BIOS Keys Reference](/guides/bios-keys-master-reference))
+2. Go to **Boot** tab
+3. Verify your hard drive/SSD appears in the list
+4. Set it as the first boot device
+5. Save and exit
+
+### Check 2: Drive Not Detected
+
+If the drive doesn't appear in BIOS at all:
+
+- **SATA drive**: Check data and power cables. Try a different SATA port.
+- **NVMe SSD**: Reseat it in the M.2 slot. Check if the slot supports NVMe (some M.2 slots are SATA-only).
+- **After OS install**: The installer may have installed to a different drive. Check all drives in BIOS.
+
+### Check 3: UEFI vs Legacy Mode
+
+If you installed your OS in UEFI mode but BIOS is set to Legacy (or vice versa), it won't boot:
+
+1. Enter BIOS
+2. Check **Boot Mode**: UEFI, Legacy, or Both
+3. **Windows 10/11**: Must be UEFI with Secure Boot
+4. **Linux**: Usually UEFI, but some installs use Legacy
+5. Try toggling between UEFI and Legacy to see which works
+6. Check **CSM (Compatibility Support Module)**: disable it for pure UEFI boot
+
+### Check 4: Secure Boot
+
+Some Linux installations require Secure Boot to be **disabled**. Some Windows installations require it **enabled**:
+
+1. Enter BIOS → **Security** or **Boot** tab
+2. Find **Secure Boot** and check its state
+3. If you just installed Linux: try disabling Secure Boot
+4. If Windows won't boot: try enabling Secure Boot
+
+## Windows Blue Screen (BSOD)
+
+### Read the Stop Code
+
+The blue screen shows a **stop code** at the bottom. Common codes:
+
+| Stop Code | Cause | Fix |
+|---|---|---|
+| **CRITICAL_PROCESS_DIED** | System file corruption | Run SFC and DISM (see below) |
+| **INACCESSIBLE_BOOT_DEVICE** | Storage driver issue | Boot Safe Mode, roll back driver |
+| **KERNEL_SECURITY_CHECK_FAILURE** | Driver or RAM issue | Run memory diagnostic, update drivers |
+| **SYSTEM_SERVICE_EXCEPTION** | Driver crash | Boot Safe Mode, uninstall recent drivers |
+| **DPC_WATCHDOG_VIOLATION** | Storage or SSD driver | Update SSD firmware, install manufacturer drivers |
+| **WHEA_UNCORRECTABLE_ERROR** | Hardware failure (CPU/RAM) | Run memory diagnostic, check CPU temps |
+| **PAGE_FAULT_IN_NONPAGED_AREA** | Bad RAM or driver | Run `mdsched.exe`, try each RAM stick |
+| **IRQL_NOT_LESS_OR_EQUAL** | Driver issue | Boot Safe Mode, uninstall recent drivers |
+| **BAD_SYSTEM_CONFIG_INFO** | Registry corruption | Use System Restore or reset |
+| **DRIVER_IRQL_NOT_LESS_OR_EQUAL** | Specific driver crash | Note the .sys file name, find and update that driver |
+
+### Boot into Safe Mode
+
+1. Force-restart 3 times in a row (hold power during boot) to trigger **Windows Recovery Environment**
+2. Or: at the login screen, hold **Shift** and click **Restart**
+3. Go to **Troubleshoot** → **Advanced options** → **Startup Settings** → **Restart**
+4. Press **4** for Safe Mode or **5** for Safe Mode with Networking
+
+### Run Repair Commands
+
+Open **Command Prompt** (from Recovery Environment or Safe Mode as Administrator):
+
+```cmd
+:: Check and repair system files
+sfc /scannow
+
+:: If SFC finds issues it can't fix, run DISM first:
+DISM /Online /Cleanup-Image /RestoreHealth
+
+:: Then run SFC again:
+sfc /scannow
+
+:: Check disk for errors:
+chkdsk C: /f /r
+```
+
+### Roll Back a Driver or Update
+
+In Safe Mode:
+1. Open **Device Manager** (Win + X → Device Manager)
+2. Find the device with the problematic driver
+3. Right-click → **Properties** → **Driver** tab → **Roll Back Driver**
+
+Or uninstall a recent Windows update:
+1. **Settings** → **Windows Update** → **Update history** → **Uninstall updates**
+2. Remove the most recent update
+
+### Use System Restore
+
+1. Boot into Recovery Environment (force-restart 3 times)
+2. **Troubleshoot** → **Advanced options** → **System Restore**
+3. Choose a restore point from before the problem started
+4. Follow the prompts
+
+Reference: [Microsoft — Advanced Startup Options](https://support.microsoft.com/en-us/windows/start-your-pc-in-safe-mode-in-windows-92c27cff-db89-8644-1ce4-b3e5c8521c2d) | [Microsoft — BSOD Troubleshooting](https://support.microsoft.com/en-us/sbs/windows/troubleshoot-blue-screen-errors-5c62726c-6571-4f0d-bfbe-a7c105929b56)
+
+## Windows Stuck at Loading
+
+If Windows shows the spinning dots forever or gets stuck at "Getting ready":
+
+1. **Wait at least 30 minutes** — some updates genuinely take this long
+2. If still stuck: **force power off** (hold power 10 seconds)
+3. Power on again — Windows may resume the update
+4. If stuck again after 3 attempts, Windows should launch Recovery Environment
+5. Try **Troubleshoot** → **Advanced options** → **Startup Repair**
+6. If that fails, try **System Restore** to a point before the update
+
+### If It's a Stuck Update
+
+Boot into Recovery Environment → Command Prompt:
+
+```cmd
+:: Delete pending update files
+ren C:\Windows\SoftwareDistribution SoftwareDistribution.old
+ren C:\Windows\System32\catroot2 catroot2.old
+
+:: Reboot
+exit
+```
+
+## Windows Automatic Repair Loop
+
+"Your PC did not start correctly" → Automatic Repair → fails → restart → repeat.
+
+### Fix 1: Startup Repair
+
+1. In the Automatic Repair screen, click **Advanced options**
+2. **Troubleshoot** → **Advanced options** → **Startup Repair**
+3. Wait for the repair to complete
+
+### Fix 2: Command Prompt Fixes
+
+From Advanced options → Command Prompt:
+
+```cmd
+:: Rebuild BCD (Boot Configuration Data)
+bootrec /fixmbr
+bootrec /fixboot
+bootrec /rebuildbcd
+
+:: If bootrec /fixboot gives "Access denied":
+bootsect /nt60 sys /mbr
+
+:: Repair system files
+sfc /scannow /offbootdir=C:\ /offwindir=C:\Windows
+DISM /Image:C:\ /Cleanup-Image /RestoreHealth
+```
+
+### Fix 3: Disable Early Launch Anti-Malware
+
+Sometimes antivirus drivers cause boot loops:
+
+1. Advanced options → Startup Settings → Restart
+2. Press **8** — Disable early launch anti-malware protection
+
+### Fix 4: System Restore
+
+1. Advanced options → System Restore
+2. Pick a restore point from before the issue
+
+### Fix 5: Reset (Last Resort)
+
+1. Advanced options → **Reset this PC**
+2. Choose **Keep my files** (reinstalls Windows but keeps personal files)
+3. If that fails, choose **Remove everything** (clean install)
+
+## Bootloader Repair
+
+### Windows Bootloader (UEFI)
+
+Boot from a Windows installation USB (see our [Clean Windows Install Guide](/guides/clean-windows-install) for creating one):
+
+1. Click **Repair your computer** (bottom-left of installer)
+2. **Troubleshoot** → **Advanced options** → **Command Prompt**
+
+```cmd
+:: Find your EFI System Partition
+diskpart
+list vol
+:: Look for the FAT32 volume (usually 100-500 MB) — note its volume number
+select vol N
+assign letter=S
+exit
+
+:: Rebuild the bootloader
+bcdboot C:\Windows /s S: /f UEFI
+```
+
+### Linux Bootloader (GRUB)
+
+See [GRUB Rescue](#grub-rescue) and [GRUB Errors](#grub-errors) below.
+
+## GRUB Rescue
+
+If you see `grub rescue>` prompt — GRUB can't find its configuration:
+
+### Quick Fix from GRUB Rescue
+
+```bash
+# List available partitions
+ls
+
+# Find the one with Linux (try each until you find /boot/grub)
+ls (hd0,gpt2)/boot/grub
+ls (hd0,gpt3)/boot/grub
+
+# Once found (example: hd0,gpt3):
+set prefix=(hd0,gpt3)/boot/grub
+set root=(hd0,gpt3)
+insmod normal
+normal
+```
+
+This temporarily boots. Then fix permanently from Linux:
+
+```bash
+sudo update-grub
+sudo grub-install /dev/sda   # Or /dev/nvme0n1 for NVMe drives
+```
+
+### Full Fix with Live USB
+
+If the quick fix doesn't work:
+
+1. Boot from a Linux live USB
+2. Open a terminal
+
+```bash
+# Find your Linux partition
+sudo fdisk -l
+# Or
+lsblk
+
+# Mount your Linux partition (replace sdX with your partition)
+sudo mount /dev/sdX2 /mnt
+sudo mount /dev/sdX1 /mnt/boot/efi   # EFI partition
+
+# For separate /boot partition:
+# sudo mount /dev/sdX3 /mnt/boot
+
+# Bind system directories
+sudo mount --bind /dev /mnt/dev
+sudo mount --bind /proc /mnt/proc
+sudo mount --bind /sys /mnt/sys
+
+# Enter the installed system
+sudo chroot /mnt
+
+# Reinstall GRUB
+grub-install /dev/sdX         # MBR/Legacy
+grub-install --target=x86_64-efi --efi-directory=/boot/efi   # UEFI
+update-grub
+
+# Exit and reboot
+exit
+sudo umount -R /mnt
+sudo reboot
+```
+
+Reference: [Ubuntu — GRUB Repair](https://help.ubuntu.com/community/Boot-Repair) | [Arch Wiki — GRUB](https://wiki.archlinux.org/title/GRUB)
+
+### Boot Repair Tool (Ubuntu)
+
+The easiest way to fix GRUB on Ubuntu:
+
+```bash
+# Boot from Ubuntu live USB, open terminal
+sudo add-apt-repository ppa:yannubuntu/boot-repair
+sudo apt update
+sudo apt install boot-repair
+boot-repair
+```
+
+Click **Recommended repair** — it fixes most GRUB issues automatically.
+
+Reference: [Boot Repair — Ubuntu](https://help.ubuntu.com/community/Boot-Repair) | [GitHub — Boot Repair](https://github.com/nicknomo/boot-repair)
+
+## GRUB Errors
+
+| Error Message | Cause | Fix |
+|---|---|---|
+| `error: unknown filesystem` | Partition table changed or formatted | Boot live USB → reinstall GRUB |
+| `error: no such partition` | Partition numbers changed (e.g., after resizing) | Boot live USB → `update-grub` |
+| `error: file '/boot/grub/i386-pc/normal.mod' not found` | GRUB files missing | Boot live USB → `grub-install` + `update-grub` |
+| `error: symbol 'grub_real_boot_time' not found` | GRUB version mismatch | Boot live USB → purge and reinstall grub |
+| `GRUB loading... error: disk 'hd0' not found` | Drive order changed | Enter BIOS → check boot order |
+| `minimal BASH-like line editing` | GRUB config missing | See [GRUB Rescue](#grub-rescue) above |
+
+## Linux Kernel Panic
+
+If you see `Kernel panic - not syncing:` followed by an error:
+
+### Common Kernel Panics
+
+| Message | Cause | Fix |
+|---|---|---|
+| `VFS: Unable to mount root fs` | Root partition not found | Check GRUB config, verify partition UUIDs |
+| `not syncing: Attempted to kill init!` | Init system (systemd) crash | Boot older kernel from GRUB menu, reinstall |
+| `not syncing: Fatal exception` | Hardware or driver issue | Boot older kernel, remove problematic module |
+
+### Fix: Boot an Older Kernel
+
+1. At the GRUB menu, select **Advanced options**
+2. Choose an older kernel version from the list
+3. If Linux boots successfully, remove the broken kernel:
+
+```bash
+# List installed kernels
+dpkg --list | grep linux-image   # Debian/Ubuntu
+rpm -qa | grep kernel             # Fedora/RHEL
+
+# Remove the broken kernel
+sudo apt remove linux-image-X.X.X-XX   # Debian/Ubuntu
+sudo dnf remove kernel-X.X.X            # Fedora
+```
+
+### Fix: Root Filesystem Check
+
+Boot from live USB:
+
+```bash
+# Check filesystem integrity
+sudo fsck /dev/sdX2   # Replace with your root partition
+# Answer 'y' to fix errors
+```
+
+## macOS Boot Issues
+
+### Flashing Question Mark Folder (?)
+
+The Mac can't find a bootable OS:
+
+1. **Reset NVRAM**: Power on → hold **Option + Cmd + P + R** for 20 seconds
+2. **Select Startup Disk**: System Settings → General → Startup Disk → select your macOS volume
+3. **Reinstall macOS**: Boot into Recovery (**Cmd + R**) → Reinstall macOS
+
+### Prohibitory Symbol (🚫)
+
+macOS found the drive but the OS is damaged:
+
+1. Boot into Recovery: **Cmd + R** at startup
+2. Open **Disk Utility** → First Aid on your startup disk
+3. If First Aid fails, try **Internet Recovery**: **Option + Cmd + R** (downloads recovery from Apple)
+4. Reinstall macOS from Recovery
+
+### Apple Silicon (M1/M2/M3/M4)
+
+1. **Shut down completely** (hold power for 10 seconds)
+2. **Hold the power button** until "Loading startup options" appears
+3. Select **Options** → enter Recovery
+4. Run **First Aid** on your disk
+5. If needed, reinstall macOS
+
+### macOS Safe Mode
+
+- **Intel Mac**: Hold **Shift** at startup
+- **Apple Silicon**: Shut down → hold power → select startup disk → hold **Shift** → click "Continue in Safe Mode"
+
+Reference: [Apple — If Your Mac Doesn't Start Up](https://support.apple.com/en-us/102570) | [Apple — macOS Recovery](https://support.apple.com/en-us/102603)
+
+## Dual Boot Issues
+
+### Windows Missing from GRUB (After Linux Update)
+
+```bash
+# Enable OS detection
+sudo os-prober
+
+# Update GRUB
+sudo update-grub
+
+# If os-prober doesn't find Windows, mount the Windows partition first:
+sudo mount /dev/sdXN /mnt    # Mount Windows partition
+sudo os-prober               # Should detect it now
+sudo update-grub
+```
+
+If `os-prober` is disabled (default on some distros like Fedora):
+
+```bash
+# Edit GRUB config
+sudo nano /etc/default/grub
+
+# Add this line:
+GRUB_DISABLE_OS_PROBER=false
+
+# Save, then update GRUB
+sudo update-grub   # Debian/Ubuntu
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg   # Fedora
+```
+
+### Linux Missing from Windows Boot Manager
+
+Windows updates sometimes overwrite the bootloader. Fix from a Linux live USB:
+
+```bash
+# Reinstall GRUB to the EFI partition
+sudo mount /dev/sdX2 /mnt          # Linux root
+sudo mount /dev/sdX1 /mnt/boot/efi  # EFI partition
+sudo mount --bind /dev /mnt/dev
+sudo mount --bind /proc /mnt/proc
+sudo mount --bind /sys /mnt/sys
+sudo chroot /mnt
+grub-install --target=x86_64-efi --efi-directory=/boot/efi
+update-grub
+exit
+sudo reboot
+```
+
+Or install [rEFInd](https://www.rodsbooks.com/refind/) for a more reliable dual-boot experience that Windows can't overwrite:
+
+```bash
+sudo apt install refind   # Debian/Ubuntu
+```
+
+### Both OSes Boot But Clock Is Wrong
+
+Linux uses UTC, Windows uses local time. They fight over the hardware clock:
+
+```bash
+# Fix on Linux side (recommended):
+timedatectl set-local-rtc 1
+```
+
+Or fix on Windows side (Admin CMD):
+
+```cmd
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f
+```
+
+## BitLocker Recovery Screen
+
+If Windows asks for a BitLocker recovery key after BIOS changes, dual-boot setup, or Secure Boot changes:
+
+### Find Your Recovery Key
+
+1. Go to [account.microsoft.com/devices/recoverykey](https://account.microsoft.com/devices/recoverykey) on another device
+2. Sign in with the Microsoft account linked to the PC
+3. Your recovery key should be listed
+4. Enter the 48-digit key when prompted
+
+### Prevent Future BitLocker Lockouts
+
+Before making BIOS/boot changes on a BitLocker-encrypted PC:
+
+```cmd
+:: Temporarily suspend BitLocker (does NOT decrypt)
+manage-bde -protectors -disable C:
+
+:: Make your changes (BIOS, dual boot, etc.)
+
+:: Re-enable after changes
+manage-bde -protectors -enable C:
+```
+
+Reference: [Microsoft — BitLocker Recovery](https://support.microsoft.com/en-us/windows/finding-your-bitlocker-recovery-key-in-windows-6b71ad27-0b89-ea08-f143-056f5ab347d6)
+
+## Emergency Boot Tools
+
+Keep one of these on a USB drive for emergencies:
+
+| Tool | Purpose | Download |
+|---|---|---|
+| **Ventoy** | Boot multiple ISOs from one USB | [GitHub — Ventoy](https://github.com/ventoy/Ventoy/releases) |
+| **Hiren's BootCD PE** | Windows PE with repair tools | [hirensbootcd.org](https://www.hirensbootcd.org/) |
+| **SystemRescue** | Linux-based rescue environment | [system-rescue.org](https://www.system-rescue.org/) |
+| **Super GRUB2 Disk** | Boot any OS when bootloader is broken | [supergrubdisk.org](https://www.supergrubdisk.org/) |
+| **Clonezilla** | Clone/backup drives | [clonezilla.org](https://clonezilla.org/) |
+| **GParted Live** | Partition management | [gparted.org](https://gparted.org/livecd.php) |
+
+Reference: [GitHub — Ventoy](https://github.com/ventoy/Ventoy) | [SystemRescue](https://www.system-rescue.org/)
+
+## Community Resources
+
+- [r/techsupport](https://www.reddit.com/r/techsupport/) — General tech troubleshooting
+- [r/linuxquestions](https://www.reddit.com/r/linuxquestions/) — Linux boot and GRUB help
+- [r/WindowsHelp](https://www.reddit.com/r/WindowsHelp/) — Windows repair help
+- [r/buildapc](https://www.reddit.com/r/buildapc/) — Hardware troubleshooting
+- [Tom's Hardware Forum](https://forums.tomshardware.com/) — Hardware and boot issues
+- [Arch Wiki — Boot Loaders](https://wiki.archlinux.org/title/Arch_boot_process) — Comprehensive boot reference
+- [Ubuntu Community — Boot Repair](https://help.ubuntu.com/community/Boot-Repair)
+- [Microsoft — Recovery Options](https://support.microsoft.com/en-us/windows/recovery-options-in-windows-31ce2444-7de3-818c-d626-e3b5a3024da5)
+
+## Verification
+
+- [ ] PC boots to the correct OS
+- [ ] No error messages during boot
+- [ ] Boot time is reasonable (under 60 seconds)
+- [ ] All drives are detected in BIOS
+- [ ] GRUB menu shows all installed operating systems (if dual booting)
+- [ ] You have a recovery USB/tool ready for future emergencies

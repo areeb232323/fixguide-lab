@@ -1,0 +1,326 @@
+---
+id: "10000000-0000-4000-8000-000000000013"
+slug: "chromebook-linux-installation"
+title: "Chromebook Linux Installation Guide"
+summary: "Install full Linux on a Chromebook via Developer Mode, replace ChromeOS entirely, or use ChromeOS Flex. Covers all methods with recovery options."
+difficulty: "Advanced"
+time_estimate_minutes: 90
+os: "Linux"
+tags: ["chromebook", "linux", "chromeos", "developer-mode", "mrchromebox"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-14T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-14T12:00:00.000Z"
+updated_at: "2026-03-14T12:00:00.000Z"
+kicker: "OS Installation"
+cover: "/images/guides/chromebook-linux.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Identify your Chromebook model — open `chrome://system` and note the **Hardware Class** (board name)
+- [ ] Check compatibility at [MrChromebox.tech](https://mrchromebox.tech/#devices) — not all Chromebooks support full Linux
+- [ ] Back up all files from your Chromebook (Google Drive or USB)
+- [ ] Have a USB drive (8 GB+) for the Linux installer
+- [ ] Have a second computer available in case something goes wrong
+- [ ] Create a ChromeOS Recovery USB (see "Creating Recovery Media" below)
+- [ ] Plug in the charger — do not attempt on battery
+
+> **CRITICAL**: Enabling Developer Mode **wipes all local data** on the Chromebook. Back up everything first. Some methods also disable the write-protect screw, which may void your warranty.
+
+## Understanding Your Options
+
+| Method | What It Does | Difficulty | Reversible? |
+|---|---|---|---|
+| **Crostini (Linux on ChromeOS)** | Run Linux apps inside ChromeOS | Easy | Yes — just disable it |
+| **Crouton** | Run Linux alongside ChromeOS (chroot) | Medium | Yes — delete chroot |
+| **Full Linux (MrChromebox UEFI)** | Replace ChromeOS with standard Linux | Advanced | Yes — reflash firmware + recovery |
+| **ChromeOS Flex** | Install ChromeOS on a non-Chromebook PC | Easy | Yes — reinstall original OS |
+
+## Method 1: Crostini — Linux Apps on ChromeOS (Easiest)
+
+This runs a Linux container inside ChromeOS. No Developer Mode required.
+
+1. Open **Settings** → **Advanced** → **Developers**
+2. Turn on **Linux development environment**
+3. Follow the setup wizard (allocates disk space)
+4. A Linux terminal opens — it runs Debian by default
+
+```bash
+# Update packages
+sudo apt update && sudo apt upgrade -y
+
+# Install apps
+sudo apt install firefox-esr gimp libreoffice
+```
+
+**Limitations**: No direct hardware access, no GPU acceleration on most models, cannot replace ChromeOS.
+
+**When to use this**: You just want to run a few Linux apps without changing your Chromebook.
+
+Reference: [Google — Set up Linux on ChromeOS](https://support.google.com/chromebook/answer/9145439)
+
+## Method 2: Crouton — Linux Alongside ChromeOS
+
+[Crouton](https://github.com/dnschneid/crouton) runs a full Linux desktop alongside ChromeOS using chroot. Requires Developer Mode.
+
+### Step 1: Enable Developer Mode
+
+> **WARNING**: This wipes all local data on the Chromebook.
+
+1. Power off the Chromebook
+2. Hold **Esc + Refresh (F3)** and press **Power**
+3. At the Recovery screen, press **Ctrl + D**
+4. Press **Enter** to confirm
+5. The Chromebook reboots and wipes itself (takes ~10 minutes)
+6. At every boot, you'll see a warning screen — press **Ctrl + D** to skip it (or wait 30 seconds)
+
+### Step 2: Install Crouton
+
+1. Download Crouton: [github.com/dnschneid/crouton](https://github.com/dnschneid/crouton) — click the **goo.gl/fd3zc** link or download from Releases
+2. Open the ChromeOS terminal with **Ctrl + Alt + T**
+3. Type `shell` and press Enter
+
+```bash
+# Install Ubuntu with XFCE desktop
+sudo sh ~/Downloads/crouton -t xfce
+
+# Or with Ubuntu Unity desktop
+sudo sh ~/Downloads/crouton -t unity
+
+# Or with KDE Plasma
+sudo sh ~/Downloads/crouton -t kde
+```
+
+4. Set a username and password when prompted
+5. Start Linux: `sudo startxfce4` (or `startunity`, `startkde`)
+6. Switch between ChromeOS and Linux: **Ctrl + Alt + Shift + Back/Forward**
+
+**Limitations**: Requires Developer Mode (boot warning every startup), depends on ChromeOS kernel, security concerns (Developer Mode disables verified boot).
+
+Reference: [GitHub — Crouton](https://github.com/dnschneid/crouton) | [Crouton Wiki](https://github.com/dnschneid/crouton/wiki)
+
+## Method 3: Full Linux Installation (Replace ChromeOS)
+
+This replaces ChromeOS entirely with a standard Linux distribution using custom UEFI firmware.
+
+### Step 1: Check Device Compatibility
+
+Go to [MrChromebox.tech — Supported Devices](https://mrchromebox.tech/#devices) and find your Chromebook:
+
+- **UEFI (Full ROM)** — required for full Linux install
+- **RW_LEGACY** — allows dual boot but less reliable
+- Check if **WP (Write Protect) removal** is needed
+
+| Board Name | Where to Find It |
+|---|---|
+| Check `chrome://system` | Look for "Hardware Class" |
+| Bottom of Chromebook | Model sticker |
+| [MrChromebox device list](https://mrchromebox.tech/#devices) | Match your model |
+
+### Step 2: Disable Write Protection
+
+Most Chromebooks have a write-protect mechanism that prevents flashing firmware. The method varies by model:
+
+| Method | Models | Instructions |
+|---|---|---|
+| **CR50/Ti50 CCD** (software) | 2019+ models | Use SuzyQable debug cable or `gsctool` command |
+| **Write-protect screw** | 2013–2018 models | Open case, remove the WP screw — see [iFixit](https://www.ifixit.com/) for your model |
+| **Battery disconnect** | Some models | Disconnect battery, plug in charger, flash firmware |
+
+For detailed write-protect removal instructions for your specific model, check:
+- [MrChromebox.tech — Firmware Write Protect](https://wiki.mrchromebox.tech/Firmware_Write_Protect)
+- [Chrultrabook Docs — Write Protect](https://docs.chrultrabook.com/docs/firmware/write-protect/)
+
+### Step 3: Flash UEFI Firmware
+
+1. Enable Developer Mode (see Method 2, Step 1)
+2. Open ChromeOS terminal: **Ctrl + Alt + T** → type `shell`
+3. Run the MrChromebox firmware utility:
+
+```bash
+cd; curl -LO mrchromebox.tech/firmware-util.sh && sudo bash firmware-util.sh
+```
+
+4. Choose option **2) Install/Update UEFI (Full ROM) Firmware**
+5. **Back up your stock firmware** when prompted — save to USB drive (CRITICAL for reverting)
+6. Wait for the flash to complete
+7. The Chromebook will shut down
+
+Reference: [MrChromebox Firmware Utility](https://mrchromebox.tech/#fwscript) | [GitHub — MrChromebox](https://github.com/MrChromebox)
+
+### Step 4: Install Linux
+
+After flashing UEFI firmware, your Chromebook boots like a standard PC:
+
+1. Create a bootable Linux USB (see our [Windows to Linux Migration Guide](/guides/windows-to-linux-migration) for USB creation)
+2. Insert the USB and power on
+3. Press **Esc** at the firmware screen to access the boot menu
+4. Select the USB drive
+5. Install Linux normally
+
+**Recommended distros for Chromebooks:**
+
+| Distribution | Why | Download |
+|---|---|---|
+| **GalliumOS** | Built specifically for Chromebook hardware | [galliumos.org](https://galliumos.org/) |
+| **Fedora Workstation** | Excellent hardware support | [fedoraproject.org](https://fedoraproject.org/workstation/download) |
+| **Ubuntu** | Largest community, most help available | [ubuntu.com/download](https://ubuntu.com/download/desktop) |
+| **Linux Mint** | Great for beginners | [linuxmint.com](https://linuxmint.com/download.php) |
+| **Arch Linux** | For advanced users who want full control | [archlinux.org](https://archlinux.org/download/) |
+
+### Step 5: Post-Install — Chromebook-Specific Fixes
+
+**Audio (common issue on Chromebooks):**
+
+```bash
+# Many Chromebooks need SOF firmware for audio
+sudo apt install firmware-sof-signed  # Debian/Ubuntu
+sudo dnf install alsa-sof-firmware     # Fedora
+
+# If audio still doesn't work, check:
+# https://github.com/WeirdTreeThing/chromebook-linux-audio
+```
+
+**Keyboard mapping (Chromebook keys → standard):**
+
+Chromebook keyboards have Search (🔍) instead of Caps Lock and media keys instead of F1–F12:
+
+```bash
+# In most desktop environments, go to:
+# Settings → Keyboard → remap Search key to Super or Caps Lock
+
+# For F-keys: hold Search + number keys (Search+1 = F1, etc.)
+# Or configure in keyboard settings to make top row F-keys by default
+```
+
+**Touchpad:**
+
+```bash
+# If touchpad doesn't work well
+sudo apt install libinput-tools
+# Configure in Settings → Mouse & Touchpad
+```
+
+**Suspend/resume issues:**
+
+```bash
+# Some Chromebooks have suspend problems
+# Check your specific model at:
+# https://docs.chrultrabook.com/docs/installing/post-install/
+```
+
+Reference: [Chrultrabook Docs — Post Install](https://docs.chrultrabook.com/docs/installing/post-install/) | [GitHub — Chromebook Linux Audio](https://github.com/WeirdTreeThing/chromebook-linux-audio)
+
+## Method 4: ChromeOS Flex (For Non-Chromebook PCs)
+
+[ChromeOS Flex](https://chromeenterprise.google/os/chromeosflex/) installs ChromeOS on any PC or Mac. Useful for reviving old hardware.
+
+### Step 1: Check Compatibility
+
+See the [certified models list](https://support.google.com/chromeosflex/answer/11513094) — but it works on most x86_64 machines.
+
+**Minimum requirements**: 4 GB RAM, 16 GB storage, 64-bit CPU (2010 or newer).
+
+### Step 2: Create Installer
+
+1. On any Chrome browser, install the [Chromebook Recovery Utility](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm) extension
+2. Open the extension
+3. Click the gear icon → **Use local image** → select the ChromeOS Flex ISO
+4. Or select **Google ChromeOS Flex** from the manufacturer list
+5. Select your USB drive and create the installer
+
+### Step 3: Install
+
+1. Boot from USB (see our [BIOS Keys Reference](/guides/bios-keys-master-reference) for your manufacturer)
+2. Choose **Try it first** or **Install ChromeOS Flex**
+3. Follow the setup wizard
+
+Reference: [Google — ChromeOS Flex Installation](https://support.google.com/chromeosflex/answer/11552529) | [ChromeOS Flex](https://chromeenterprise.google/os/chromeosflex/)
+
+## Creating ChromeOS Recovery Media
+
+**Always create a recovery USB before modifying your Chromebook** — this is your way back.
+
+1. On any Chrome browser, install the [Chromebook Recovery Utility](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm)
+2. Open the extension
+3. Enter your Chromebook model (from the bottom sticker or `chrome://system`)
+4. Insert a USB drive (8 GB+) — it will be erased
+5. Click **Create now**
+
+**To recover ChromeOS:**
+
+1. Power off the Chromebook
+2. Hold **Esc + Refresh (F3)** and press **Power**
+3. Insert the recovery USB when prompted
+4. Follow the on-screen instructions
+
+Reference: [Google — Recover Your Chromebook](https://support.google.com/chromebook/answer/1080595)
+
+## Reverting to ChromeOS from Full Linux
+
+If you flashed UEFI firmware and want to go back:
+
+### Step 1: Restore Stock Firmware
+
+1. Boot into Linux
+2. Run the MrChromebox firmware utility:
+
+```bash
+cd; curl -LO mrchromebox.tech/firmware-util.sh && sudo bash firmware-util.sh
+```
+
+3. Choose **9) Restore Stock Firmware**
+4. You need the firmware backup you made earlier — if you lost it, the script can download a stock image for most models
+5. Wait for the flash to complete
+
+### Step 2: Recover ChromeOS
+
+1. Use the Recovery USB you created earlier
+2. Hold **Esc + Refresh (F3)** and press **Power**
+3. Insert the recovery USB
+4. ChromeOS will reinstall itself
+
+### If You Lost Your Firmware Backup
+
+The MrChromebox script maintains stock firmware images for most devices. If your model is supported, it can download and restore automatically. If not, check:
+- [MrChromebox.tech — Stock Firmware](https://mrchromebox.tech/#devices)
+- [Chrultrabook Docs — Unbricking](https://docs.chrultrabook.com/docs/firmware/unbricking/)
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| "ChromeOS is missing or damaged" | Use Recovery USB to reinstall ChromeOS |
+| Can't enter Developer Mode | Some enterprise/school Chromebooks have it blocked by admin — you cannot bypass this |
+| Firmware flash fails | Ensure write-protect is fully disabled. Try disconnecting battery. |
+| No audio after Linux install | Install `firmware-sof-signed` (Ubuntu) or `alsa-sof-firmware` (Fedora). Check [chromebook-linux-audio](https://github.com/WeirdTreeThing/chromebook-linux-audio) |
+| Wi-Fi not working | Most Chromebook Wi-Fi works out of box. If not: `sudo apt install linux-firmware` |
+| Screen brightness keys don't work | Map keys manually in keyboard settings or use `xdotool` |
+| Touchscreen not working | Usually works with `libinput`. Check kernel version — newer is better |
+| Suspend doesn't work | Known issue on some models. Check [Chrultrabook docs](https://docs.chrultrabook.com/) for your board |
+| Boot loops after firmware flash | May need to use SuzyQable for recovery. See [Chrultrabook Unbricking](https://docs.chrultrabook.com/docs/firmware/unbricking/) |
+| USB devices not recognized | Try different USB ports. Some Chromebooks have USB-A and USB-C — try both |
+| "OS verification is OFF" at boot | Normal in Developer Mode. Press Ctrl+D to skip. Install UEFI firmware to remove this |
+
+## Community Resources
+
+- [r/chrultrabook](https://www.reddit.com/r/chrultrabook/) — Full Linux on Chromebooks community
+- [r/Crostini](https://www.reddit.com/r/Crostini/) — Linux containers on ChromeOS
+- [r/chromeos](https://www.reddit.com/r/chromeos/) — General ChromeOS community
+- [Chrultrabook Docs](https://docs.chrultrabook.com/) — Comprehensive documentation for Linux on Chromebooks
+- [MrChromebox.tech](https://mrchromebox.tech/) — Firmware and device support
+- [GalliumOS Wiki](https://wiki.galliumos.org/) — Chromebook-specific Linux distro
+
+## Verification
+
+- [ ] Linux boots successfully on the Chromebook
+- [ ] Wi-Fi connects and internet works
+- [ ] Audio works (speakers and headphone jack)
+- [ ] Keyboard and touchpad function correctly
+- [ ] Display brightness controls work
+- [ ] USB ports work
+- [ ] Recovery USB is created and stored safely
+- [ ] You know how to revert to ChromeOS if needed

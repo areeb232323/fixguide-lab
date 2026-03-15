@@ -1,0 +1,344 @@
+---
+id: "10000000-0000-4000-8000-000000000012"
+slug: "macos-to-linux-migration"
+title: "macOS to Linux Migration Guide"
+summary: "Switch from macOS to Linux on Intel Macs or Apple Silicon. Covers distro selection, bootloader setup, driver issues, and data transfer."
+difficulty: "Advanced"
+time_estimate_minutes: 120
+os: "Linux"
+tags: ["migration", "macos", "linux", "apple", "bootloader"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-14T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-12T12:00:00.000Z"
+updated_at: "2026-03-14T12:00:00.000Z"
+kicker: "OS Migration"
+cover: "/images/guides/mac-to-linux.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Identify your Mac: **Intel** or **Apple Silicon** (M1/M2/M3/M4) — Apple menu → About This Mac
+- [ ] Back up everything with Time Machine or to an external drive
+- [ ] Export iCloud data (photos, documents, passwords, contacts)
+- [ ] Export browser bookmarks and saved passwords
+- [ ] Note all applications you use and find Linux alternatives
+- [ ] Deauthorize the Mac from iTunes/Apple Music and licensed software
+- [ ] For Intel Macs: have a USB drive (16 GB+) for the Linux installer
+- [ ] For Apple Silicon: understand that native Linux support is experimental
+
+> **CRITICAL DIFFERENCE**: Intel Macs can run Linux natively with full support. Apple Silicon Macs require the experimental [Asahi Linux](https://asahilinux.org/) project — it works but not everything is supported yet.
+
+## Intel Mac vs Apple Silicon — Which Path?
+
+| Feature | Intel Mac | Apple Silicon (M1/M2/M3/M4) |
+|---|---|---|
+| Linux support | **Full** — most distros work | **Experimental** — Asahi Linux only |
+| Installation method | Standard USB boot | Asahi installer from macOS |
+| Wi-Fi | Works with drivers | Supported on Asahi |
+| GPU acceleration | Works (Intel/AMD) | Partial (improving) |
+| Bluetooth | Usually works | Supported on Asahi |
+| Webcam | Works | Supported on recent Asahi |
+| Thunderbolt | Works | Partial |
+| Touch Bar (MacBook Pro) | Partial support | N/A |
+| Dual boot with macOS | Yes (rEFInd) | Yes (Asahi handles it) |
+| Recommended distro | Ubuntu, Fedora, Linux Mint | Fedora Asahi Remix |
+
+## Path A: Intel Mac — Full Linux Install
+
+### Step 1: Choose Your Distro
+
+| Distribution | Best For | Download |
+|---|---|---|
+| **Fedora Workstation** | Best Mac-like experience, GNOME desktop | [fedoraproject.org](https://fedoraproject.org/workstation/download) |
+| **Ubuntu** | Largest community, most guides available | [ubuntu.com/download](https://ubuntu.com/download/desktop) |
+| **Linux Mint** | Most Windows-like, great for beginners | [linuxmint.com](https://linuxmint.com/download.php) |
+| **elementary OS** | Most macOS-like look and feel | [elementary.io](https://elementary.io/) |
+| **Pop!_OS** | Best for MacBooks with NVIDIA eGPU | [pop.system76.com](https://pop.system76.com/) |
+
+### Step 2: Create Bootable USB
+
+On your Mac, use [Balena Etcher](https://github.com/balena-io/etcher/releases):
+
+1. Download Etcher and the Linux ISO
+2. Open Etcher → Select ISO → Select USB drive → Flash
+3. Wait for completion
+
+Or via Terminal:
+
+```bash
+# Find your USB drive
+diskutil list
+
+# Unmount the USB (replace diskN with your drive)
+diskutil unmountDisk /dev/diskN
+
+# Write the ISO (replace diskN — use rdisk for speed)
+sudo dd if=~/Downloads/ubuntu.iso of=/dev/rdiskN bs=4m status=progress
+
+# Eject
+diskutil eject /dev/diskN
+```
+
+### Step 3: Boot from USB
+
+1. Shut down your Mac
+2. Insert the USB drive
+3. Hold **Option (⌥)** while pressing the power button
+4. Release when the Startup Manager appears
+5. Select **"EFI Boot"** — this is your Linux USB
+6. Choose **"Try Linux"** first to test hardware
+
+### Step 4: Check Hardware Compatibility
+
+In the live session, verify:
+
+- [ ] Wi-Fi connects (Intel Macs usually work; Broadcom adapters may need drivers)
+- [ ] Display is at correct resolution
+- [ ] Trackpad works (multi-touch may need configuration)
+- [ ] Audio works (internal speakers and headphone jack)
+- [ ] Keyboard backlight works
+- [ ] Webcam works
+
+**If Wi-Fi doesn't work** (common on Macs with Broadcom chips):
+
+```bash
+# Check your adapter
+lspci | grep -i network
+
+# Install Broadcom drivers (connect via Ethernet or USB tethering first)
+sudo apt install bcmwl-kernel-source   # Ubuntu/Mint
+sudo dnf install broadcom-wl           # Fedora (RPM Fusion required)
+```
+
+Reference: [Arch Wiki — MacBook](https://wiki.archlinux.org/title/MacBook) | [Ubuntu Wiki — MacBook](https://help.ubuntu.com/community/MacBook)
+
+### Step 5: Install Linux
+
+**Full replacement** (erase macOS):
+
+1. Open the installer
+2. Choose **"Erase disk and install"**
+3. The installer will handle partitioning
+4. Complete setup and reboot
+
+**Dual boot** (keep macOS + Linux):
+
+1. Before installing, use macOS **Disk Utility** to shrink your macOS partition:
+   - Open Disk Utility → Select your drive → Partition → add a new partition (50+ GB)
+   - Format it as **MS-DOS (FAT)** — the Linux installer will reformat it
+2. Boot from the Linux USB
+3. Choose **"Install alongside macOS"** or **"Something else"** (manual partitioning)
+4. Install to the free space
+
+**Boot manager for dual boot:**
+
+Install [rEFInd](https://www.rodsbooks.com/refind/) for a clean boot menu:
+
+```bash
+# From macOS (before or after Linux install):
+# Download rEFInd from https://www.rodsbooks.com/refind/getting.html
+# Run the installer:
+sudo ./refind-install
+```
+
+rEFInd automatically detects macOS and Linux and shows a graphical menu at startup.
+
+Reference: [rEFInd Boot Manager](https://www.rodsbooks.com/refind/) | [GitHub — rEFInd](https://github.com/nicknomo/rEFInd)
+
+### Step 6: Post-Install — Mac-Specific Fixes
+
+**Trackpad (multi-touch gestures):**
+
+```bash
+# Install libinput-gestures for swipe gestures
+sudo apt install libinput-tools
+pip install gestures
+# Configure 3-finger swipe for workspace switching
+```
+
+Or install [Fusuma](https://github.com/iberianpig/fusuma) for customizable gestures.
+
+**Function keys (F1–F12 default instead of media keys):**
+
+```bash
+# Make Fn keys work as F1-F12 by default
+echo 1 | sudo tee /sys/module/hid_apple/parameters/fnmode
+
+# Make permanent:
+echo "options hid_apple fnmode=1" | sudo tee /etc/modprobe.d/hid_apple.conf
+sudo update-initramfs -u
+```
+
+**Keyboard mapping (Cmd → Ctrl):**
+
+Use [xmodmap](https://wiki.archlinux.org/title/Xmodmap) or your desktop environment's keyboard settings to swap Cmd and Ctrl if you prefer the Mac layout.
+
+**Retina display scaling:**
+
+```bash
+# GNOME
+gsettings set org.gnome.desktop.interface scaling-factor 2
+
+# Or use Settings → Displays → Scale → 200%
+```
+
+**Battery life optimization:**
+
+```bash
+# Install TLP for power management
+sudo apt install tlp tlp-rdw
+sudo systemctl enable tlp
+sudo systemctl start tlp
+```
+
+Reference: [TLP — Linux Power Management](https://linrunner.de/tlp/) | [GitHub — TLP](https://github.com/linrunner/TLP)
+
+## Path B: Apple Silicon — Asahi Linux
+
+### What is Asahi Linux?
+
+[Asahi Linux](https://asahilinux.org/) is a project that brings Linux to Apple Silicon Macs. It reverse-engineers Apple's hardware to make Linux work. The recommended option is **Fedora Asahi Remix**.
+
+**Current support status** (check [asahilinux.org](https://asahilinux.org/) for latest):
+
+| Feature | Status |
+|---|---|
+| CPU & RAM | Fully working |
+| NVMe storage | Fully working |
+| USB ports | Fully working |
+| Wi-Fi | Working |
+| Bluetooth | Working |
+| Display (internal) | Working with GPU acceleration |
+| Speakers | Working (with DSP) |
+| Webcam | Working |
+| Thunderbolt | Partial |
+| Touch Bar | Not yet |
+| External displays | Working (DP over USB-C) |
+
+### Step 1: Install Asahi Linux
+
+The installation is done from macOS — no USB needed:
+
+1. Open **Terminal** on your Mac
+2. Run the installer:
+
+```bash
+curl https://alx.sh | sh
+```
+
+3. Follow the prompts:
+   - Choose how much disk space to allocate to Linux (minimum 15 GB, recommended 50+ GB)
+   - Choose **Fedora Asahi Remix** (recommended) or other options
+   - The installer will resize your macOS partition and install Linux
+4. When prompted, shut down and hold the power button to enter startup options
+5. Select the Asahi Linux volume
+6. Complete the Fedora setup wizard
+
+Reference: [Asahi Linux Installation Guide](https://asahilinux.org/fedora/) | [GitHub — Asahi Linux](https://github.com/AsahiLinux)
+
+### Step 2: Switching Between macOS and Linux
+
+- **At boot**: Hold the power button for 3 seconds → select the OS
+- **Set default**: In macOS, go to System Settings → General → Startup Disk
+- **From Linux**: `sudo asahi-bless` to set Linux as default boot
+
+### Step 3: Post-Install
+
+```bash
+# Update everything
+sudo dnf upgrade --refresh -y
+
+# Install common apps
+sudo dnf install firefox vlc gimp libreoffice
+```
+
+## Data Transfer — macOS to Linux
+
+### Export Before Switching
+
+| Data | How to Export | Where to Put on Linux |
+|---|---|---|
+| Documents | Copy from ~/Documents to USB | ~/Documents |
+| Photos | Photos app → File → Export Originals | ~/Pictures |
+| Music | Copy ~/Music/Music/Media to USB | ~/Music |
+| Contacts | Contacts app → File → Export → vCard | Import into GNOME Contacts or Thunderbird |
+| Calendar | Calendar app → File → Export → ICS | Import into GNOME Calendar or Thunderbird |
+| Bookmarks | Safari → File → Export Bookmarks (HTML) | Import into Firefox/Chrome |
+| Passwords | System Settings → Passwords → Export | Import into Bitwarden/KeePass |
+| SSH keys | Copy ~/.ssh/ folder | ~/.ssh/ (set permissions: `chmod 700 ~/.ssh`) |
+| Git config | Copy ~/.gitconfig | ~/.gitconfig |
+
+### macOS App → Linux Equivalent
+
+| macOS App | Linux Equivalent | Install |
+|---|---|---|
+| Safari | Firefox | Pre-installed |
+| Apple Photos | Shotwell / digiKam | `sudo apt install shotwell` |
+| Apple Music | Rhythmbox / Spotify | Pre-installed / [spotify.com](https://www.spotify.com/) |
+| iMovie | Kdenlive / Shotcut | `sudo apt install kdenlive` |
+| GarageBand | Audacity / LMMS | `sudo apt install audacity` |
+| Pages | LibreOffice Writer | Pre-installed |
+| Numbers | LibreOffice Calc | Pre-installed |
+| Keynote | LibreOffice Impress | Pre-installed |
+| Preview | Evince / Okular | Pre-installed |
+| Terminal | Terminal (GNOME/KDE) | Pre-installed |
+| Finder | Nautilus (Files) | Pre-installed |
+| Time Machine | Timeshift / rsync | `sudo apt install timeshift` |
+| Spotlight | Albert / Ulauncher | [albertlauncher.github.io](https://albertlauncher.github.io/) |
+| Homebrew | apt / dnf / flatpak | Built-in |
+| Xcode | VS Code + GCC/Clang | [code.visualstudio.com](https://code.visualstudio.com/) |
+
+## Troubleshooting — All Mac Models
+
+| Problem | Solution |
+|---|---|
+| Wi-Fi not working (Intel Mac) | Install `bcmwl-kernel-source` (Ubuntu) or `broadcom-wl` (Fedora via RPM Fusion) |
+| No sound from speakers | Install `pulseaudio` or `pipewire`. On Asahi: `sudo dnf install asahi-audio` |
+| Trackpad too sensitive or unresponsive | Install `libinput` and configure sensitivity in Settings → Mouse & Touchpad |
+| Retina display too small | Set scaling to 200% in Display settings |
+| Keyboard layout wrong | Settings → Keyboard → Input Sources → add "English (US, Macintosh)" |
+| Can't boot back to macOS | Hold Option (⌥) at boot (Intel) or hold Power button (Apple Silicon) |
+| External monitor not detected | Check display settings, try different port, update GPU drivers |
+| Battery drains fast | Install TLP: `sudo apt install tlp && sudo systemctl enable tlp` |
+| Touch Bar not working | Install [tiny-dfr](https://github.com/WhatAmISupposedToPutHere/tiny-dfr) for basic support |
+| GRUB not showing macOS | Run `sudo update-grub` or install rEFInd instead |
+| Fusion Drive issues | Fusion Drives (HDD+SSD combo) need special handling — split them first in macOS Disk Utility |
+
+## Going Back to macOS
+
+If you want to revert:
+
+### Intel Mac
+1. Boot into macOS Recovery: **Cmd + R** at startup (or **Option + Cmd + R** for Internet Recovery)
+2. Open Disk Utility → Erase the entire drive
+3. Reinstall macOS from the Recovery screen
+
+### Apple Silicon Mac
+1. Hold the power button → Options → macOS Recovery
+2. If needed, use [DFU Restore](https://support.apple.com/en-us/108900) with another Mac and Apple Configurator 2
+
+Reference: [Apple — Reinstall macOS](https://support.apple.com/en-us/102655)
+
+## Community Resources
+
+- [r/linux4noobs](https://www.reddit.com/r/linux4noobs/) — Beginner Linux help
+- [r/AsahiLinux](https://www.reddit.com/r/AsahiLinux/) — Apple Silicon Linux community
+- [r/maclinux](https://www.reddit.com/r/maclinux/) — Linux on Mac community
+- [Arch Wiki — MacBook](https://wiki.archlinux.org/title/MacBook) — Comprehensive hardware reference
+- [Asahi Linux Blog](https://asahilinux.org/blog/) — Development updates and status
+- [Ubuntu Apple Hardware Wiki](https://help.ubuntu.com/community/MacBook)
+- [T2Linux Wiki](https://wiki.t2linux.org/) — For newer Intel Macs with T2 chip
+
+## Verification
+
+- [ ] Linux boots successfully
+- [ ] Wi-Fi connects and internet works
+- [ ] Audio plays through speakers and headphones
+- [ ] Trackpad and keyboard function correctly
+- [ ] Display is at correct resolution and scaling
+- [ ] All personal files are transferred and accessible
+- [ ] Battery life is reasonable (check with `upower -i /org/freedesktop/UPower/devices/battery_BAT0`)
+- [ ] Can switch back to macOS if dual-booting

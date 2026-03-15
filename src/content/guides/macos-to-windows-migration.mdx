@@ -1,0 +1,214 @@
+---
+id: "10000000-0000-4000-8000-000000000011"
+slug: "macos-to-windows-migration"
+title: "macOS to Windows Migration Guide"
+summary: "Switch from Mac to Windows PC. Covers data transfer, app equivalents, Boot Camp, and common transition issues."
+difficulty: "Intermediate"
+time_estimate_minutes: 90
+os: "Windows"
+tags: ["migration", "macos", "windows", "apple", "boot-camp"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-14T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-10T12:00:00.000Z"
+updated_at: "2026-03-14T12:00:00.000Z"
+kicker: "OS Migration"
+cover: "/images/guides/mac-to-windows.jpg"
+---
+
+## Pre-flight Checklist
+
+- [ ] Back up your entire Mac using Time Machine or an external drive
+- [ ] Export all iCloud data (photos, documents, contacts, calendars, passwords)
+- [ ] Export browser bookmarks and saved passwords
+- [ ] Note all applications you use daily and find Windows equivalents
+- [ ] Deauthorize your Mac from iTunes/Apple Music (if applicable)
+- [ ] Deauthorize Adobe, Microsoft Office, and other licensed apps
+- [ ] If installing on the same Mac (Boot Camp): check Intel vs Apple Silicon
+
+> **Apple Silicon Note**: Macs with M1/M2/M3/M4 chips **cannot** run Windows via Boot Camp. You need virtualization software (Parallels or UTM). Intel Macs can use Boot Camp.
+
+## Step 1: Export Your Data from macOS
+
+### iCloud Data
+
+1. Go to [icloud.com](https://www.icloud.com/) and sign in
+2. Download your data:
+   - **Photos**: Select all → Download (or use iCloud for Windows later)
+   - **Drive**: Download all files
+   - **Contacts**: Export as vCard → import into Outlook or Google Contacts
+   - **Calendar**: Export as ICS → import into Outlook or Google Calendar
+   - **Bookmarks**: Export from Safari (File → Export Bookmarks)
+   - **Notes**: Copy to another app or email them to yourself
+   - **Passwords**: Export from Safari (Settings → Passwords → Export) or use [iCloud Passwords for Windows](https://apps.microsoft.com/detail/9pktq5699m62)
+
+### Keychain Passwords
+
+1. Open **Keychain Access** (Spotlight → "Keychain Access")
+2. Select **login** keychain
+3. File → Export Items → save as CSV
+4. Or use a password manager like [Bitwarden](https://bitwarden.com/) to import/export
+
+### Application Data
+
+| App | How to Export |
+|---|---|
+| **Apple Photos** | File → Export → Export Unmodified Originals |
+| **Apple Music** | Music → Preferences → Files → locate Music Library |
+| **Safari bookmarks** | File → Export Bookmarks |
+| **Mail** | Mailbox → Export Mailbox (saves .mbox files) |
+| **Messages** | No official export — use [iMazing](https://imazing.com/) for backup |
+| **Final Cut Pro** projects | File → Copy Project to Library |
+| **GarageBand** projects | Share → Export Song to Disk |
+
+### SSH Keys and Developer Files
+
+```bash
+# Copy SSH keys
+cp -r ~/.ssh/ /Volumes/ExternalDrive/ssh-keys/
+
+# Copy git config
+cp ~/.gitconfig /Volumes/ExternalDrive/
+
+# Copy shell config
+cp ~/.zshrc /Volumes/ExternalDrive/
+
+# List installed Homebrew packages
+brew list > /Volumes/ExternalDrive/brew-packages.txt
+```
+
+## Step 2: Choose Your Path
+
+### Path A: New Windows PC (Recommended)
+
+Buy or build a Windows PC and transfer data via external drive or cloud.
+
+**Recommended transfer methods:**
+1. **External drive**: Copy files from Mac → plug into Windows PC
+2. **Cloud storage**: Upload to [Google Drive](https://drive.google.com/) or [OneDrive](https://onedrive.live.com/) → download on Windows
+3. **Network transfer**: If both machines are on the same network, share folders via SMB
+
+### Path B: Boot Camp (Intel Mac Only)
+
+Install Windows alongside macOS on the same machine:
+
+1. Open **Boot Camp Assistant** (Spotlight → "Boot Camp")
+2. Download the Windows 11 ISO from [Microsoft](https://www.microsoft.com/en-us/software-download/windows11)
+3. Boot Camp will partition your drive and create a Windows installer
+4. Follow the Windows installation prompts
+5. Boot Camp automatically installs Apple drivers for Windows
+6. Switch between macOS and Windows by holding **Option (⌥)** at startup
+
+Reference: [Apple — Install Windows with Boot Camp](https://support.apple.com/en-us/102622)
+
+> **Drive space**: Allocate at least 64 GB for Windows, ideally 128+ GB if you'll use it regularly. You cannot easily resize the partition later.
+
+### Path C: Virtualization (Apple Silicon or Intel)
+
+Run Windows inside macOS without repartitioning:
+
+| Software | Price | Link | Notes |
+|---|---|---|---|
+| **Parallels Desktop** | $99/year | [parallels.com](https://www.parallels.com/) | Best performance on Apple Silicon |
+| **UTM** | Free | [mac.getutm.app](https://mac.getutm.app/) | Open-source, uses QEMU |
+| **VMware Fusion** | Free (Personal) | [vmware.com](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | Good for Intel Macs |
+
+Reference: [r/macapps — Virtualization Discussion](https://www.reddit.com/r/macapps/)
+
+## Step 3: Set Up Your Windows PC
+
+### Install Essential Apps
+
+**macOS → Windows equivalents:**
+
+| macOS App | Windows Equivalent | Link |
+|---|---|---|
+| Safari | Firefox / Chrome / Edge | [mozilla.org](https://www.mozilla.org/firefox/) |
+| iCloud Drive | OneDrive (built-in) / Google Drive | [drive.google.com](https://drive.google.com/) |
+| Apple Photos | Windows Photos (built-in) / Google Photos | [photos.google.com](https://photos.google.com/) |
+| iMessage | WhatsApp / Telegram / Signal | [whatsapp.com](https://www.whatsapp.com/download) |
+| FaceTime | Zoom / Google Meet | [zoom.us](https://zoom.us/download) |
+| Apple Music | Apple Music for Windows / Spotify | [apps.microsoft.com](https://apps.microsoft.com/detail/9pfhdd62mxs1) |
+| Final Cut Pro | DaVinci Resolve (free) / Adobe Premiere | [blackmagicdesign.com](https://www.blackmagicdesign.com/products/davinciresolve) |
+| GarageBand | Audacity (free) / FL Studio | [audacityteam.org](https://www.audacityteam.org/) |
+| Pages/Numbers/Keynote | Microsoft Office / Google Docs | [office.com](https://www.office.com/) |
+| Preview | SumatraPDF (free) | [sumatrapdfreader.org](https://www.sumatrapdfreader.org/) |
+| Terminal | Windows Terminal | Pre-installed or [GitHub](https://github.com/microsoft/terminal) |
+| Spotlight | Everything Search | [voidtools.com](https://www.voidtools.com/) |
+| Time Machine | File History (built-in) | Settings → System → Storage → Backup options |
+| Homebrew | winget (built-in) / Chocolatey | [chocolatey.org](https://chocolatey.org/) |
+
+### Keyboard Shortcuts Cheat Sheet
+
+| macOS | Windows | Action |
+|---|---|---|
+| Cmd + C | Ctrl + C | Copy |
+| Cmd + V | Ctrl + V | Paste |
+| Cmd + Z | Ctrl + Z | Undo |
+| Cmd + Space | Win key | Search |
+| Cmd + Tab | Alt + Tab | Switch apps |
+| Cmd + Q | Alt + F4 | Quit app |
+| Cmd + W | Ctrl + W | Close tab/window |
+| Cmd + , | Ctrl + , (or app menus) | App preferences |
+| Cmd + Shift + 3 | Win + Shift + S | Screenshot |
+| Cmd + Delete | Delete | Delete file |
+| Cmd + Shift + . | View → Hidden items | Show hidden files |
+
+### iCloud for Windows
+
+Access your iCloud data on Windows:
+
+1. Download [iCloud for Windows](https://apps.microsoft.com/detail/9pktq5699m62) from the Microsoft Store
+2. Sign in with your Apple ID
+3. Choose what to sync: Photos, Drive, Bookmarks, Passwords
+4. Your iCloud data appears in File Explorer
+
+## Step 4: Transfer Files
+
+### From External Drive
+
+1. Plug in your backup drive
+2. Mac-formatted drives (APFS/HFS+) aren't readable on Windows natively
+3. Options:
+   - Use [MacDrive](https://www.intego.com/macdrive/) (paid) to read Mac drives on Windows
+   - Use [HFSExplorer](https://www.catacombae.org/hfsexplorer/) (free, read-only)
+   - Better: Format a USB drive as **exFAT** on your Mac first (readable by both macOS and Windows), then copy files to it
+
+### From Cloud
+
+1. Sign into your cloud service on Windows
+2. Download your files
+3. Organize into Windows folders (Documents, Pictures, Music, Videos)
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| Can't read Mac-formatted external drive | Use exFAT format, or install MacDrive/HFSExplorer |
+| Missing fonts from Mac documents | Install the same fonts on Windows, or use Google Fonts alternatives |
+| .pages/.numbers files won't open | Upload to icloud.com → download as .docx/.xlsx |
+| Keyboard feels different | Remap keys with [PowerToys](https://github.com/microsoft/PowerToys) Keyboard Manager |
+| Trackpad gestures missing | Enable gestures in Settings → Bluetooth & devices → Touchpad |
+| Display looks different (color/scaling) | Settings → Display → Scale and layout → adjust DPI |
+| iMessage not available | Use iMessage on your iPhone, or switch to cross-platform messaging |
+| AirDrop not available | Use [Snapdrop](https://snapdrop.net/) or [Nearby Share](https://www.android.com/better-together/nearby-share-app/) |
+
+## Community Resources
+
+- [r/windows](https://www.reddit.com/r/windows/) — General Windows help
+- [r/SwitchToWindows](https://www.reddit.com/r/SwitchToWindows/) — Community for Mac-to-Windows switchers
+- [r/buildapc](https://www.reddit.com/r/buildapc/) — If building a new Windows PC
+- [Microsoft Community](https://answers.microsoft.com/) — Official support
+- [r/bootcamp](https://www.reddit.com/r/bootcamp/) — Boot Camp setup help
+
+## Verification
+
+- [ ] All personal files transferred (documents, photos, music)
+- [ ] Browser bookmarks and passwords imported
+- [ ] Email accounts configured
+- [ ] Essential applications installed and licensed
+- [ ] iCloud accessible (via iCloud for Windows or web)
+- [ ] Keyboard shortcuts are comfortable (remap if needed)
+- [ ] Old Mac is deauthorized from licensed software

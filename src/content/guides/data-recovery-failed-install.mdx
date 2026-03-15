@@ -1,0 +1,357 @@
+---
+id: "10000000-0000-4000-8000-000000000015"
+slug: "data-recovery-failed-install"
+title: "Data Recovery After a Failed OS Install"
+summary: "Recover files when an OS installation goes wrong. Covers accidental formatting, deleted partitions, and corrupted drives using free tools."
+difficulty: "Advanced"
+time_estimate_minutes: 60
+os: "Any"
+tags: ["data-recovery", "partition", "testdisk", "photorec", "backup"]
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-14T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-14T12:00:00.000Z"
+updated_at: "2026-03-14T12:00:00.000Z"
+kicker: "Data Recovery"
+cover: "/images/guides/data-recovery.jpg"
+---
+
+## STOP — Read This First
+
+> **CRITICAL RULE**: The more you use the drive, the less data you can recover. Every write operation can overwrite your deleted files. **Stop using the affected drive immediately.**
+
+If you accidentally formatted or installed an OS over your data:
+
+1. **Power off the PC** if the affected drive is your only drive
+2. **Do NOT install anything** on the affected drive
+3. **Boot from a live USB** (Linux or rescue environment) to access the drive without writing to it
+4. **Recover to a DIFFERENT drive** — never recover files to the same drive you're recovering from
+
+## What Can Be Recovered?
+
+| Scenario | Recovery Chance | Tool to Use |
+|---|---|---|
+| **Accidentally deleted partition** (not reformatted) | **Very High** (90%+) | TestDisk |
+| **Quick format** (Windows) | **High** (80%+) | TestDisk, PhotoRec, R-Linux |
+| **Full format** (Windows, "uncheck quick format") | **Low** (10–30%) | PhotoRec (file carving only) |
+| **Installed OS over old data** (same partition) | **Medium** (50–70%) | PhotoRec |
+| **Installed OS on wrong drive** | **Medium-High** (depends on how much was written) | TestDisk + PhotoRec |
+| **SSD with TRIM enabled** | **Very Low** (near 0%) | Data is likely gone — TRIM erases blocks immediately |
+| **Encrypted drive (BitLocker/LUKS) that was formatted** | **Near Zero** | Recovery requires the encryption key |
+
+> **SSD Warning**: Modern SSDs with TRIM support actively erase deleted data in the background. If your drive is an SSD and you formatted it, recovery chances are very low. HDDs have much better recovery odds.
+
+## Boot into a Recovery Environment
+
+**Do NOT boot from the affected drive.** Use one of these:
+
+### Option 1: Linux Live USB (Recommended)
+
+1. On another PC, download [Ubuntu](https://ubuntu.com/download/desktop) or [Linux Mint](https://linuxmint.com/download.php) ISO
+2. Create a bootable USB with [Rufus](https://github.com/pbatard/rufus/releases) (Windows) or [Balena Etcher](https://github.com/balena-io/etcher/releases) (Mac/Linux)
+3. Boot the affected PC from USB (see [BIOS Keys Reference](/guides/bios-keys-master-reference))
+4. Choose **"Try Ubuntu"** (do NOT install)
+
+### Option 2: SystemRescue
+
+[SystemRescue](https://www.system-rescue.org/) is a dedicated recovery Linux distribution with recovery tools pre-installed.
+
+1. Download from [system-rescue.org](https://www.system-rescue.org/)
+2. Create bootable USB
+3. Boot from it
+
+### Option 3: Hiren's Boot CD PE (Windows-based)
+
+[Hiren's BootCD PE](https://www.hirensbootcd.org/) boots a Windows PE environment with recovery tools.
+
+1. Download from [hirensbootcd.org](https://www.hirensbootcd.org/)
+2. Write to USB with Rufus
+3. Boot from it
+
+## Method 1: TestDisk — Recover Lost Partitions
+
+[TestDisk](https://www.cgsecurity.org/wiki/TestDisk) is a free, open-source tool that can recover deleted or damaged partitions — restoring your files **in place** without copying them.
+
+### When to Use TestDisk
+
+- You deleted a partition by accident
+- The partition table is damaged but the data is still there
+- The installer overwrote the partition table but didn't format the data area
+- A partition is listed as "unallocated" but wasn't actually erased
+
+### Step-by-Step
+
+```bash
+# Install TestDisk (on Ubuntu live USB)
+sudo apt update
+sudo apt install testdisk
+
+# Or on Fedora:
+sudo dnf install testdisk
+```
+
+1. Run TestDisk:
+
+```bash
+sudo testdisk
+```
+
+2. Select **Create** a new log file
+3. Select the affected **disk** (e.g., `/dev/sda` or `/dev/nvme0n1`)
+4. Choose the partition table type:
+   - **Intel** for MBR (older systems)
+   - **EFI GPT** for GPT (modern systems — most PCs made after 2012)
+5. Select **Analyse** → **Quick Search**
+6. TestDisk will scan for lost partitions
+7. If it finds your partition(s), they'll be listed with size and filesystem type
+8. Mark the partition you want to recover as:
+   - **P** (Primary) or **L** (Logical) — depending on the original type
+   - **D** to delete a partition you don't want
+9. Press **Enter** to continue → **Write** to restore the partition table
+10. Reboot and check if your files are back
+
+> **TestDisk is non-destructive** — it writes a new partition table pointing to your existing data. It does NOT move or copy data.
+
+Reference: [TestDisk — Official Wiki](https://www.cgsecurity.org/wiki/TestDisk) | [TestDisk Step-by-Step](https://www.cgsecurity.org/wiki/TestDisk_Step_By_Step) | [GitHub — TestDisk](https://github.com/cgsecurity/testdisk)
+
+## Method 2: PhotoRec — File Carving (When Partition Is Gone)
+
+[PhotoRec](https://www.cgsecurity.org/wiki/PhotoRec) recovers individual files by scanning the raw disk for known file signatures. It works even when the partition table and filesystem are completely destroyed.
+
+### When to Use PhotoRec
+
+- The partition was formatted (not just deleted)
+- TestDisk can't find the partition
+- An OS was installed over your data
+- You need to recover specific file types (photos, documents, etc.)
+
+### Step-by-Step
+
+```bash
+# PhotoRec is included with TestDisk
+sudo apt install testdisk   # Installs both TestDisk and PhotoRec
+```
+
+1. Connect a **separate drive** for recovered files (USB drive, external HDD)
+2. Mount the recovery drive:
+
+```bash
+sudo mkdir /mnt/recovery
+sudo mount /dev/sdb1 /mnt/recovery   # Replace sdb1 with your recovery drive
+```
+
+3. Run PhotoRec:
+
+```bash
+sudo photorec
+```
+
+4. Select the affected **disk**
+5. Select the partition (or **Whole disk** if partitions are gone)
+6. Choose filesystem type:
+   - **ext2/ext3/ext4** for Linux
+   - **Other** for NTFS, FAT32, exFAT (Windows/Mac)
+7. Choose **Free** (scan only unallocated space) or **Whole** (scan everything)
+8. Navigate to `/mnt/recovery` and press **C** to start recovery
+9. Wait — this can take hours depending on drive size
+10. Files are saved in `recup_dir.1`, `recup_dir.2`, etc.
+
+### PhotoRec: Filtering File Types
+
+By default, PhotoRec recovers everything. To speed things up, recover only what you need:
+
+1. In the PhotoRec menu, press **F** for **File Opt**
+2. Press **S** to deselect all
+3. Enable only the file types you need (e.g., jpg, png, docx, pdf, xlsx)
+4. Press **B** to save settings
+
+### Supported File Types
+
+PhotoRec recognizes 480+ file formats including: JPG, PNG, GIF, MP4, MOV, PDF, DOCX, XLSX, PPTX, ZIP, RAR, PSD, AI, SVG, MP3, FLAC, SQLite databases, and many more.
+
+Reference: [PhotoRec — Official Wiki](https://www.cgsecurity.org/wiki/PhotoRec) | [PhotoRec Step-by-Step](https://www.cgsecurity.org/wiki/PhotoRec_Step_By_Step)
+
+## Method 3: R-Linux (GUI Alternative)
+
+If you prefer a graphical interface, [R-Linux](https://www.r-studio.com/free-linux-recovery.html) is a free GUI recovery tool:
+
+1. Download from [r-studio.com](https://www.r-studio.com/free-linux-recovery.html)
+2. Install on the live environment (or a separate PC)
+3. Scan the affected drive
+4. Browse recoverable files in a file-manager-like interface
+5. Select files and recover to a different drive
+
+**Also available for Windows**: [R-Studio](https://www.r-studio.com/) (paid for Windows, free version for Linux).
+
+Reference: [R-Linux Download](https://www.r-studio.com/free-linux-recovery.html)
+
+## Method 4: Windows File Recovery (Windows Only)
+
+Microsoft's official recovery tool, available from the Microsoft Store:
+
+```cmd
+:: Install from Microsoft Store or PowerShell:
+winget install "Windows File Recovery"
+
+:: Recover all files from C: to D:\Recovery
+winfr C: D:\Recovery /extensive
+
+:: Recover specific file types
+winfr C: D:\Recovery /extensive /n *.jpg /n *.png /n *.docx /n *.pdf
+
+:: Recover from a specific folder
+winfr C: D:\Recovery /extensive /n \Users\YourName\Documents\
+```
+
+Reference: [Microsoft — Windows File Recovery](https://support.microsoft.com/en-us/windows/recover-lost-files-on-windows-10-61f5b28a-f5b8-3cc2-0f8e-a63cb4e1d4c4)
+
+## Method 5: ddrescue — Clone a Failing Drive First
+
+If the drive has physical issues (clicking, very slow, read errors), **clone it first** before attempting recovery. Working on a failing drive directly can make things worse.
+
+```bash
+# Install ddrescue
+sudo apt install gddrescue
+
+# Clone the failing drive to an image file on another drive
+# (this can take hours for large or failing drives)
+sudo ddrescue /dev/sda /mnt/recovery/disk-image.img /mnt/recovery/rescue.log
+
+# If the first pass has errors, run again — ddrescue will retry bad sectors
+sudo ddrescue -r3 /dev/sda /mnt/recovery/disk-image.img /mnt/recovery/rescue.log
+
+# Now run TestDisk/PhotoRec on the image file instead of the original drive
+sudo testdisk /mnt/recovery/disk-image.img
+sudo photorec /mnt/recovery/disk-image.img
+```
+
+Reference: [GNU ddrescue Manual](https://www.gnu.org/software/ddrescue/manual/ddrescue_manual.html) | [Arch Wiki — Disk Cloning](https://wiki.archlinux.org/title/Disk_cloning)
+
+## Scenario-Specific Instructions
+
+### "I Installed Windows/Linux on the Wrong Drive"
+
+1. **Stop immediately** — do NOT continue using the new installation
+2. Boot from a live USB
+3. Run `sudo fdisk -l` or `lsblk` to identify the affected drive
+4. Try **TestDisk** first — the installer may have only written a new partition table
+5. If TestDisk can't restore the partition, use **PhotoRec** to carve files
+
+### "I Formatted the Wrong Partition During Install"
+
+1. If it was a **quick format**: data is likely still there — use TestDisk or PhotoRec
+2. If it was a **full format**: use PhotoRec (file carving) — some files may be recoverable
+3. The key question is how much new data was written over the old data
+
+### "OS Install Failed Halfway"
+
+1. The incomplete installation may have only partially written data
+2. Boot from a live USB
+3. Try mounting the original partition — files may still be accessible:
+
+```bash
+sudo mkdir /mnt/old
+sudo mount /dev/sdX1 /mnt/old   # Try mounting the partition
+ls /mnt/old                      # Check if files are there
+```
+
+4. If mounting works, copy files to another drive immediately
+5. If mounting fails, use TestDisk to check the partition table
+
+### "Dual Boot Setup Deleted My Windows Partition"
+
+1. Boot from a Linux live USB
+2. Run TestDisk → it can usually find and restore the deleted Windows partition
+3. If the NTFS data is intact, TestDisk restores it without data loss
+4. After restoring, you may need to repair the Windows bootloader:
+
+```cmd
+:: Boot from Windows USB → Repair your computer → Command Prompt
+bootrec /fixmbr
+bootrec /fixboot
+bootrec /rebuildbcd
+```
+
+### "My SSD Was Formatted (TRIM Enabled)"
+
+Unfortunately, SSDs with TRIM enabled erase data blocks in the background after deletion. Recovery chances are very low.
+
+1. Try PhotoRec immediately — some data may not have been TRIMmed yet
+2. If the format happened very recently (minutes), you have a small window
+3. Professional data recovery services may be able to help, but success is not guaranteed
+
+## When to Call a Professional
+
+Consider professional data recovery services when:
+
+- The drive makes clicking or grinding sounds
+- The drive is not detected by any computer
+- The data is irreplaceable (family photos, business records)
+- DIY tools haven't worked and the data is critical
+- The drive was physically damaged (water, fire, drop)
+
+**Professional recovery costs**: $300–$1,500+ depending on the damage and drive type.
+
+**Reputable services**:
+- [DriveSavers](https://drivesaversdatarecovery.com/) — industry leader, works with all drive types
+- [Ontrack](https://www.ontrack.com/en-us/data-recovery) — large international provider
+- [Gillware](https://www.gillware.com/) — specializes in hard drive and SSD recovery
+
+> **Important**: Do NOT open a hard drive yourself. HDDs require clean-room environments to open without contaminating the platters. Opening one at home will likely destroy the data permanently.
+
+## Prevention — Backup Strategies
+
+The best data recovery is the backup you made before things went wrong:
+
+| Method | Protects Against | Tools |
+|---|---|---|
+| **Cloud backup** | Drive failure, theft, fire | Google Drive, OneDrive, Backblaze |
+| **External drive backup** | Drive failure, accidental deletion | Windows File History, Time Machine, rsync |
+| **Drive clone/image** | OS corruption, failed updates | Clonezilla, Macrium Reflect |
+| **Full disk image before OS install** | Installation mistakes | Clonezilla, `dd`, Macrium |
+
+### Before Any OS Installation
+
+```bash
+# Create a full disk image with Clonezilla or dd
+# (Boot from live USB first)
+
+# Using dd (simple but slow):
+sudo dd if=/dev/sda of=/mnt/external/full-backup.img bs=4M status=progress
+
+# Using Clonezilla (faster, compressed):
+# Download from https://clonezilla.org/
+# Boot from Clonezilla USB → device-image → savedisk
+```
+
+Reference: [Clonezilla](https://clonezilla.org/) | [Backblaze](https://www.backblaze.com/) | [GitHub — Clonezilla](https://github.com/stevenshiau/clonezilla)
+
+## Tool Reference
+
+| Tool | Type | OS | Cost | Best For |
+|---|---|---|---|---|
+| [TestDisk](https://www.cgsecurity.org/wiki/TestDisk) | Partition recovery | All | Free | Recovering deleted partitions |
+| [PhotoRec](https://www.cgsecurity.org/wiki/PhotoRec) | File carving | All | Free | Recovering files from formatted drives |
+| [R-Linux](https://www.r-studio.com/free-linux-recovery.html) | GUI recovery | Linux | Free | Easy-to-use graphical recovery |
+| [ddrescue](https://www.gnu.org/software/ddrescue/) | Drive cloning | Linux | Free | Cloning failing drives |
+| [Windows File Recovery](https://apps.microsoft.com/detail/9n26s50ln705) | File recovery | Windows | Free | Simple Windows file recovery |
+| [Recuva](https://www.ccleaner.com/recuva) | File recovery | Windows | Free | Easy Windows recovery with GUI |
+| [R-Studio](https://www.r-studio.com/) | Professional recovery | All | Paid ($80) | Advanced recovery features |
+
+## Community Resources
+
+- [r/datarecovery](https://www.reddit.com/r/datarecovery/) — Data recovery help and recommendations
+- [r/techsupport](https://www.reddit.com/r/techsupport/) — General tech help
+- [CGSecurity Forum](https://forum.cgsecurity.org/) — TestDisk/PhotoRec official forum
+- [Data Recovery Wiki](https://www.reddit.com/r/datarecovery/wiki/index/) — Comprehensive guide from r/datarecovery
+
+## Verification
+
+- [ ] Booted from live USB without writing to the affected drive
+- [ ] Identified the correct drive and partition to recover
+- [ ] Recovery output is saved to a **separate** drive (not the affected one)
+- [ ] Recovered files open correctly and are not corrupted
+- [ ] All critical files accounted for
+- [ ] Created a proper backup strategy to prevent future data loss

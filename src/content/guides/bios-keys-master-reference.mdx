@@ -1,0 +1,286 @@
+---
+id: "10000000-0000-4000-8000-000000000009"
+slug: "bios-keys-master-reference"
+title: "BIOS/UEFI Keys — Complete Reference for Every Manufacturer"
+summary: "The definitive list of BIOS entry keys, boot menu keys, and recovery methods for every PC, laptop, and motherboard manufacturer."
+difficulty: "Beginner"
+time_estimate_minutes: 10
+os: "Any"
+tags: ["bios", "uefi", "reference", "motherboard", "boot-menu"]
+testing_status: "CommunityVerified"
+last_reviewed_date: "2026-03-14T00:00:00.000Z"
+author_id: "00000000-0000-4000-8000-000000000001"
+published: true
+hidden: false
+created_at: "2026-03-10T12:00:00.000Z"
+updated_at: "2026-03-14T12:00:00.000Z"
+kicker: "Reference"
+cover: "/images/guides/bios-keys.jpg"
+---
+
+## How to Use This Reference
+
+When you need to enter BIOS/UEFI settings or the boot menu, **press the key repeatedly** as soon as you power on (before the OS logo appears). If you miss it, restart and try again.
+
+> **Tip**: If your PC boots too fast to catch the key, see [Entering UEFI from Windows](#entering-uefi-from-windows-1011) at the bottom of this guide.
+
+## Laptop Manufacturers
+
+### Dell
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F2** | Press immediately at Dell logo |
+| Boot Menu | **F12** | One-time boot device selection |
+| Diagnostics | **F12** → select Diagnostics | Built-in hardware test |
+| Recovery | **F8** or **Ctrl + F11** | Dell Recovery partition |
+
+Support: [dell.com/support](https://www.dell.com/support/home) — Enter your Service Tag for model-specific documentation.
+
+### HP
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F10** | Press at HP logo |
+| Boot Menu | **F9** | Or press **Esc** first, then F9 |
+| System Information | **Esc** | Shows menu of all options |
+| Recovery | **F11** | HP Recovery Manager |
+| Network Boot | **F12** | PXE/network boot |
+
+Support: [support.hp.com](https://support.hp.com/) — Use serial number for exact specs.
+
+**HP-specific issue**: Some newer HP laptops require holding **Esc** to get the Startup Menu, then choosing the option from there.
+
+### Lenovo
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F1** or **F2** | Varies by model |
+| Boot Menu | **F12** | One-time boot selection |
+| Novo Menu (ThinkPad) | **Enter** at startup | Shows recovery, BIOS, boot options |
+| Novo Button (IdeaPad) | **Small pinhole button** | On the side of the laptop, press with a paperclip when off |
+| Recovery | **F11** or Novo | Lenovo Recovery |
+
+Support: [support.lenovo.com](https://support.lenovo.com/) — Use serial number or auto-detect.
+
+**Lenovo-specific**: IdeaPad laptops have a tiny Novo button (usually near the power button or on the side). Press it when the laptop is **powered off** to access recovery and BIOS.
+
+### ASUS
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F2** or **Del** | Hold F2 while pressing power button |
+| Boot Menu | **F8** or **Esc** | One-time boot selection |
+| Recovery | **F9** | ASUS Recovery partition |
+| EZ Flash (BIOS update) | Inside BIOS → Tool → EZ Flash | Update BIOS from USB |
+
+Support: [asus.com/support](https://www.asus.com/support/) — Search by model.
+
+**ASUS-specific tip**: On some ASUS laptops, you need to **hold F2 while pressing the power button** (not after).
+
+### Acer
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F2** or **Del** | Press at Acer logo |
+| Boot Menu | **F12** | Must be enabled in BIOS first |
+| Recovery | **Alt + F10** | Acer Recovery Management |
+
+Support: [acer.com/support](https://www.acer.com/us-en/support) — Enter serial number.
+
+**Acer-specific**: The F12 boot menu is **disabled by default** on many Acer laptops. To enable it: enter BIOS (F2) → Main tab → set "F12 Boot Menu" to **Enabled**.
+
+### MSI
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **Del** | Standard for MSI |
+| Boot Menu | **F11** | One-time boot selection |
+| Recovery | **F3** | MSI Recovery (if available) |
+
+Support: [msi.com/support](https://www.msi.com/support) — Download center by product.
+
+### Samsung
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F2** | Press at Samsung logo |
+| Boot Menu | **F10** or **Esc** | Varies by model |
+| Recovery | **F4** | Samsung Recovery Solution |
+
+### Toshiba / Dynabook
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F2** | Some models: hold **F2** while powering on |
+| Boot Menu | **F12** | One-time boot selection |
+| Recovery | **0 (zero)** held while powering on | Toshiba Recovery Wizard |
+
+### Microsoft Surface
+
+| Action | Key | Notes |
+|---|---|---|
+| UEFI Settings | Hold **Volume Up** + press **Power** | Release power, keep holding Volume Up |
+| Boot from USB | Hold **Volume Down** + press **Power** | Boots directly from USB if one is connected |
+| Recovery | Use Windows Recovery | Settings → Recovery → Advanced startup |
+
+Reference: [Microsoft Surface UEFI](https://support.microsoft.com/en-us/surface/how-to-use-surface-uefi)
+
+### Apple Mac (Intel)
+
+| Action | Key | Notes |
+|---|---|---|
+| Startup Manager | Hold **Option (⌥)** at chime | Select boot device |
+| Recovery Mode | Hold **Cmd + R** | macOS Recovery |
+| Internet Recovery | Hold **Option + Cmd + R** | Download recovery from Apple |
+| Safe Mode | Hold **Shift** | Boot into Safe Mode |
+| Verbose Mode | Hold **Cmd + V** | Show boot log |
+| Reset NVRAM | Hold **Option + Cmd + P + R** for 20 sec | Resets startup disk, display, and time zone settings |
+
+Reference: [Apple Startup Key Combinations](https://support.apple.com/en-us/102603)
+
+> **Note**: Apple Silicon Macs (M1/M2/M3) do NOT have traditional BIOS. Instead, hold the **Power button** for 10 seconds to access Startup Options.
+
+## Desktop Motherboard Manufacturers
+
+### ASUS (ROG, TUF, Prime, ProArt)
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **Del** or **F2** | Press repeatedly at POST |
+| Boot Menu | **F8** | One-time boot selection |
+| BIOS Flashback | Button on rear I/O | Flash BIOS without CPU — see manual |
+| Q-Flash | Inside BIOS → Tool | Update BIOS from USB |
+| Clear CMOS | Jumper or button on board | Check manual for location |
+
+### Gigabyte / AORUS
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **Del** | Standard for Gigabyte |
+| Boot Menu | **F12** | One-time boot selection |
+| Q-Flash Plus | Button on rear I/O | Flash BIOS without CPU (select boards) |
+| Q-Flash | Inside BIOS → Q-Flash | Update BIOS from USB |
+| Clear CMOS | **CLR_CMOS** button or jumper | On rear I/O or motherboard |
+
+Support: [gigabyte.com/support](https://www.gigabyte.com/Support) — Download BIOS by model.
+
+### MSI (MEG, MPG, MAG, PRO)
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **Del** | Standard for MSI |
+| Boot Menu | **F11** | One-time boot selection |
+| M-Flash | Inside BIOS → M-Flash | Update BIOS from USB |
+| Flash BIOS Button | Button on rear I/O | Available on higher-end boards |
+| Clear CMOS | **JBAT1** jumper | Short pins 2-3 for 10 seconds |
+
+Support: [msi.com/support](https://www.msi.com/support)
+
+### ASRock
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **F2** or **Del** | Press at POST screen |
+| Boot Menu | **F11** | One-time boot selection |
+| Instant Flash | Inside BIOS → Tool → Instant Flash | Update BIOS from USB |
+| Clear CMOS | **CLRCMOS1** jumper | Short for 10 seconds |
+
+Support: [asrock.com/support](https://www.asrock.com/support/index.asp)
+
+### EVGA
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **Del** or **F2** | Press at POST |
+| Boot Menu | **F7** or **F11** | Varies by model |
+
+### Biostar
+
+| Action | Key | Notes |
+|---|---|---|
+| BIOS/UEFI Setup | **Del** | Standard |
+| Boot Menu | **F9** | One-time boot |
+
+## Quick Reference Table (All Manufacturers)
+
+| Manufacturer | BIOS Key | Boot Menu | Recovery | Support Site |
+|---|---|---|---|---|
+| **Dell** | F2 | F12 | F8 | [dell.com/support](https://www.dell.com/support/home) |
+| **HP** | F10 (or Esc) | F9 | F11 | [support.hp.com](https://support.hp.com/) |
+| **Lenovo** | F1 / F2 | F12 | F11 / Novo | [support.lenovo.com](https://support.lenovo.com/) |
+| **ASUS** | F2 / Del | F8 / Esc | F9 | [asus.com/support](https://www.asus.com/support/) |
+| **Acer** | F2 / Del | F12 | Alt+F10 | [acer.com/support](https://www.acer.com/us-en/support) |
+| **MSI** | Del | F11 | F3 | [msi.com/support](https://www.msi.com/support) |
+| **Gigabyte** | Del | F12 | — | [gigabyte.com/support](https://www.gigabyte.com/Support) |
+| **ASRock** | F2 / Del | F11 | — | [asrock.com/support](https://www.asrock.com/support/index.asp) |
+| **Samsung** | F2 | F10 / Esc | F4 | [samsung.com/support](https://www.samsung.com/us/support/) |
+| **Toshiba** | F2 | F12 | Hold 0 | [dynabook.com/support](https://support.dynabook.com/) |
+| **Surface** | Vol Up+Power | Vol Down+Power | — | [support.microsoft.com](https://support.microsoft.com/) |
+| **Apple Intel** | Option (⌥) | Option (⌥) | Cmd+R | [support.apple.com](https://support.apple.com/) |
+
+## Entering UEFI from Windows 10/11
+
+If your PC boots too fast to catch the BIOS key:
+
+### Method 1: Settings
+
+1. Open **Settings** → **System** → **Recovery**
+2. Click **"Restart now"** under Advanced startup
+3. Click **Troubleshoot** → **Advanced options** → **UEFI Firmware Settings**
+4. Click **Restart** — the PC reboots directly into BIOS
+
+### Method 2: Shift + Restart
+
+1. Open the Start menu
+2. Hold **Shift** and click **Restart**
+3. Follow the same Troubleshoot → Advanced options → UEFI Firmware Settings path
+
+### Method 3: Command Line
+
+```cmd
+shutdown /r /fw /t 0
+```
+This restarts directly into firmware settings.
+
+### Method 4: From Linux
+
+```bash
+sudo systemctl reboot --firmware-setup
+```
+
+## Entering BIOS When You Can't Boot at All
+
+If your OS won't load and you can't catch the BIOS key:
+
+1. **Keep pressing the key**: Power on and spam the BIOS key (Del, F2, etc.) immediately
+2. **Try all common keys**: If you don't know the manufacturer, try Del, F2, F10, Esc, F1 — one at a time
+3. **Unplug all USB devices**: Sometimes USB devices interfere with POST
+4. **Reset CMOS**: Remove the CMOS battery for 60 seconds (see our [BIOS Recovery Guide](/guides/bios-uefi-recovery))
+5. **Try an external keyboard**: Some wireless keyboards don't work during POST — use a wired USB keyboard
+
+## Common BIOS Settings Explained
+
+| Setting | What It Does | When to Change |
+|---|---|---|
+| **Secure Boot** | Only allows signed OS bootloaders | Disable for most Linux installs, enable for Windows 11 |
+| **CSM / Legacy Boot** | Enables Legacy BIOS compatibility mode | Disable for modern OS installs (use UEFI) |
+| **Boot Order** | Which device to boot from first | Change when booting from USB installer |
+| **TPM** | Trusted Platform Module for encryption | Enable for Windows 11 (required) |
+| **Virtualization (VT-x)** | Hardware virtualization support | Enable for VMs, WSL2, Docker |
+| **Fast Boot** | Skips some POST checks for speed | Disable if you need to catch the BIOS key |
+| **XMP / DOCP** | RAM overclocking profile | Enable to run RAM at rated speed |
+
+## Community Resources
+
+- [r/techsupport](https://www.reddit.com/r/techsupport/) — Help with BIOS access issues
+- [r/buildapc](https://www.reddit.com/r/buildapc/) — Motherboard-specific help
+- [Tom's Hardware Forum](https://forums.tomshardware.com/) — Hardware troubleshooting
+- [UEFI Forum](https://uefi.org/) — Official UEFI specification
+
+## Verification
+
+- [ ] You can enter BIOS/UEFI settings on your specific machine
+- [ ] You can access the one-time boot menu
+- [ ] You know how to change boot order
+- [ ] You know how to enable/disable Secure Boot
