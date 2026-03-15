@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { setDemoSession, generateDemoId } from "@/lib/demo-auth";
 
 type Mode = "signin" | "signup";
+
+const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 export function SignInForm({ initialMode = "signin" }: { initialMode?: Mode }) {
   const router = useRouter();
@@ -16,8 +18,6 @@ export function SignInForm({ initialMode = "signin" }: { initialMode?: Mode }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -25,46 +25,58 @@ export function SignInForm({ initialMode = "signin" }: { initialMode?: Mode }) {
     setLoading(true);
 
     try {
-      const supabase = createSupabaseBrowserClient();
+      if (isSupabaseConfigured) {
+        // Real Supabase auth
+        const { createSupabaseBrowserClient } = await import("@/lib/supabase/client");
+        const supabase = createSupabaseBrowserClient();
 
-      if (mode === "signup") {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { display_name: displayName || email.split("@")[0] },
-          },
-        });
-        if (signUpError) throw signUpError;
-        setSuccess("Account created! Check your email to confirm, then sign in.");
-        setMode("signin");
+        if (mode === "signup") {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { display_name: displayName || email.split("@")[0] },
+            },
+          });
+          if (signUpError) throw signUpError;
+          setSuccess("Account created! Check your email to confirm, then sign in.");
+          setMode("signin");
+          setLoading(false);
+          return;
+        } else {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (signInError) throw signInError;
+        }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (signInError) throw signInError;
-        router.push("/profile");
-        router.refresh();
+        // Demo auth — cookie-based, no database needed
+        if (mode === "signup") {
+          setDemoSession({
+            id: generateDemoId(email),
+            email,
+            display_name: displayName || email.split("@")[0],
+            role: "admin",
+          });
+          setSuccess("Demo account created! Signing you in...");
+        } else {
+          setDemoSession({
+            id: generateDemoId(email),
+            email,
+            display_name: email.split("@")[0],
+            role: "admin",
+          });
+        }
       }
+
+      router.push("/profile");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
-  }
-
-  if (!supabaseUrl) {
-    return (
-      <div className="card-surface rounded-[1.2rem] px-5 py-6 text-center">
-        <p className="text-sm font-semibold">Supabase not configured</p>
-        <p className="mt-2 text-xs text-[var(--muted)]">
-          To enable authentication, add <code className="rounded bg-stone-200 px-1">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
-          <code className="rounded bg-stone-200 px-1">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to your environment variables.
-          See the README for setup instructions.
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -141,6 +153,12 @@ export function SignInForm({ initialMode = "signin" }: { initialMode?: Mode }) {
             : "Sign In"}
       </button>
 
+      {!isSupabaseConfigured && (
+        <p className="text-center text-xs text-[var(--muted)]">
+          Demo mode — enter any email and password to sign in.
+        </p>
+      )}
+
       <div className="flex items-center justify-between text-xs text-[var(--muted)]">
         <button
           type="button"
@@ -156,7 +174,7 @@ export function SignInForm({ initialMode = "signin" }: { initialMode?: Mode }) {
             : "Already have an account? Sign in"}
         </button>
 
-        {mode === "signin" && (
+        {mode === "signin" && isSupabaseConfigured && (
           <a href="/auth/reset-password" className="underline hover:text-[var(--accent)]">
             Forgot password?
           </a>

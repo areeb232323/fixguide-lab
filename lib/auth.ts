@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/guards";
+import { getDemoUser } from "@/lib/demo-auth-server";
 import type { UserRole } from "@contracts/enums";
 
 export interface AuthUser {
@@ -12,9 +13,13 @@ export interface AuthUser {
 
 /**
  * Get the authenticated user from the request. Returns null if not authenticated.
+ * Falls back to demo auth cookie when Supabase is not configured.
  */
 export async function getAuthUser(): Promise<AuthUser | null> {
-  if (!isSupabaseConfigured()) return null;
+  if (!isSupabaseConfigured()) {
+    // Fall back to demo auth when Supabase isn't set up
+    return getDemoUser();
+  }
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
