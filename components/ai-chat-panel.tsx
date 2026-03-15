@@ -59,9 +59,9 @@ export function AiChatPanel({ contextId, contextType }: AiChatPanelProps) {
         ...prev,
         {
           role: "assistant",
-          content: data.response,
+          content: data.answer_markdown,
           citations: data.citations,
-          warnings: data.warnings,
+          warnings: data.safety_warnings,
         },
       ]);
     } catch {

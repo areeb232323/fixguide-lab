@@ -3,8 +3,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Breadcrumbs } from "@/components/site-ui";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/toast-provider";
+
+const COOKIE_NAME = "demo-auth";
+const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+function getDemoCookie(): { display_name: string; bio?: string } | null {
+  try {
+    const match = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith(`${COOKIE_NAME}=`));
+    if (!match) return null;
+    return JSON.parse(decodeURIComponent(match.split("=").slice(1).join("=")));
+  } catch {
+    return null;
+  }
+}
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -17,23 +31,34 @@ export default function ProfileEditPage() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const supabase = createSupabaseBrowserClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.push("/signin");
-          return;
-        }
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("display_name, bio")
-          .eq("id", user.id)
-          .single();
-        if (profile) {
-          setDisplayName(profile.display_name ?? "");
-          setBio(profile.bio ?? "");
+        if (isSupabaseConfigured) {
+          const { createSupabaseBrowserClient } = await import("@/lib/supabase/client");
+          const supabase = createSupabaseBrowserClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            router.push("/signin");
+            return;
+          }
+          const { data: profile } = await supabase
+            .from("user_profiles")
+            .select("display_name, bio")
+            .eq("id", user.id)
+            .single();
+          if (profile) {
+            setDisplayName(profile.display_name ?? "");
+            setBio(profile.bio ?? "");
+          }
+        } else {
+          // Demo mode: read from cookie
+          const demo = getDemoCookie();
+          if (!demo) {
+            router.push("/signin");
+            return;
+          }
+          setDisplayName(demo.display_name ?? "");
+          setBio(demo.bio ?? "");
         }
       } catch {
-        // Supabase not configured — redirect
         router.push("/profile");
       } finally {
         setPageLoading(false);
@@ -56,6 +81,17 @@ export default function ProfileEditPage() {
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error ?? "Failed to update");
+      }
+
+      // In demo mode, also update the client-side cookie immediately
+      if (!isSupabaseConfigured) {
+        const demo = getDemoCookie();
+        if (demo) {
+          demo.display_name = displayName;
+          demo.bio = bio;
+          const value = encodeURIComponent(JSON.stringify(demo));
+          document.cookie = `${COOKIE_NAME}=${value};path=/;max-age=${60 * 60 * 24 * 30};samesite=lax`;
+        }
       }
 
       addToast("Profile updated!", "success");
