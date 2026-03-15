@@ -2,7 +2,7 @@
 id: "10000000-0000-4000-8000-000000000001"
 slug: "windows-to-linux-migration"
 title: "Windows to Linux Migration Guide"
-summary: "Step-by-step guide for migrating from Windows to Linux, with backup procedures and common pitfalls."
+summary: "Step-by-step guide for migrating from Windows to Linux, with backup procedures, official tools, and community resources."
 difficulty: "Intermediate"
 time_estimate_minutes: 120
 os: "Linux"
@@ -35,46 +35,177 @@ Before you begin, complete every item on this list. Skipping any step risks perm
 
 For most users migrating from Windows, these distributions offer the smoothest transition:
 
-- **Linux Mint** — Familiar desktop layout, excellent hardware support
-- **Ubuntu** — Largest community, most third-party software support
-- **Fedora** — Cutting-edge packages, strong security defaults
+| Distribution | Best For | Download |
+|---|---|---|
+| **Linux Mint** | Familiar Windows-like desktop, great for beginners | [linuxmint.com/download.php](https://linuxmint.com/download.php) |
+| **Ubuntu** | Largest community, widest third-party software support | [ubuntu.com/download/desktop](https://ubuntu.com/download/desktop) |
+| **Fedora** | Cutting-edge packages, strong security defaults | [fedoraproject.org/workstation/download](https://fedoraproject.org/workstation/download) |
+| **Pop!_OS** | Excellent GPU support (NVIDIA), clean UI | [pop.system76.com](https://pop.system76.com/) |
 
-Download the ISO from the official website only. Verify the SHA256 checksum after downloading.
+**Community resources for choosing:**
+- [r/linux4noobs — Which Distro Should I Use?](https://www.reddit.com/r/linux4noobs/wiki/index) — Beginner-friendly wiki with distro recommendations
+- [r/FindMeADistro](https://www.reddit.com/r/FindMeADistro/) — Community that helps you pick the right distro for your use case
+- [DistroWatch](https://distrowatch.com/) — Tracks Linux distributions with reviews and rankings
+
+### Verifying Your Download
+
+Always verify the SHA256 checksum after downloading the ISO. Each distro provides checksums on its download page.
+
+**Windows PowerShell:**
+```powershell
+Get-FileHash -Algorithm SHA256 .\linux-mint-21.3-cinnamon-64bit.iso
+```
+
+Compare the output hash against the official checksum listed on the download page. If they don't match, re-download the ISO.
 
 ## Creating a Bootable USB
 
-1. Download **Rufus** (Windows) or **Balena Etcher** (cross-platform)
-2. Insert a USB drive with at least 8 GB capacity (all data on it will be erased)
-3. Select the downloaded ISO file
-4. Choose GPT partition scheme for UEFI systems
-5. Click Start and wait for the process to complete
+You need a USB drive with at least 8 GB capacity. All data on the USB will be erased.
+
+### Recommended Tools
+
+| Tool | Platform | Link |
+|---|---|---|
+| **Rufus** | Windows | [github.com/pbatard/rufus/releases](https://github.com/pbatard/rufus/releases) |
+| **Balena Etcher** | Windows, macOS, Linux | [github.com/balena-io/etcher/releases](https://github.com/balena-io/etcher/releases) |
+| **Ventoy** | Windows, Linux | [github.com/ventoy/Ventoy/releases](https://github.com/ventoy/Ventoy/releases) |
+
+### Steps (Using Rufus)
+
+1. Download and run Rufus from the GitHub releases page linked above
+2. Insert your USB drive
+3. Under **Device**, select your USB drive
+4. Under **Boot selection**, click SELECT and choose the downloaded ISO
+5. Set **Partition scheme** to **GPT** (for UEFI systems) or MBR (for Legacy BIOS)
+6. Leave **File system** as the default
+7. Click **START** and wait for the process to complete
+8. Safely eject the USB when done
+
+> **Tip**: Ventoy is especially useful if you want to put multiple ISOs on a single USB drive. Just copy the ISO files onto the Ventoy-formatted USB — no flashing needed.
 
 ## Installing Linux
 
-1. Restart your computer and enter the boot menu (usually F12, F2, or Del)
-2. Select the USB drive as the boot device
-3. Choose "Try Linux" first to verify hardware compatibility
-4. If everything works, launch the installer
-5. Select **"Erase disk and install"** for a clean migration, or **"Install alongside"** for dual boot
-6. Choose your timezone, keyboard layout, and create your user account
-7. Wait for installation to complete and remove the USB when prompted
+### Step 1: Boot from USB
+
+1. Restart your computer
+2. Enter the boot menu by pressing the key shown during the splash screen:
+   - **Dell**: F12
+   - **HP**: F9 or Esc
+   - **Lenovo**: F12 or Fn+F12
+   - **ASUS**: F8 or Esc
+   - **MSI**: F11
+   - Check your manufacturer's support page if unsure: [Dell Support](https://www.dell.com/support/home), [HP Support](https://support.hp.com/), [Lenovo Support](https://support.lenovo.com/)
+3. Select the USB drive from the boot menu
+
+### Step 2: Try Before Installing
+
+1. Choose **"Try Linux"** or **"Live Session"** from the boot menu
+2. This loads Linux entirely from USB without touching your hard drive
+3. Verify the following work in the live session:
+   - Wi-Fi connects
+   - Display resolution is correct
+   - Audio plays
+   - Trackpad/mouse works
+4. If something doesn't work, search the [Ubuntu Forums](https://ubuntuforums.org/) or [Ask Ubuntu](https://askubuntu.com/) for your hardware model before proceeding
+
+### Step 3: Run the Installer
+
+1. Launch the installer from the desktop
+2. Select your language and keyboard layout
+3. Choose **"Normal installation"** (includes browser, office suite, media player)
+4. Check **"Install third-party software for graphics and Wi-Fi hardware"**
+5. Choose your installation type:
+   - **"Erase disk and install"** — Full migration, replaces Windows entirely
+   - **"Install alongside Windows"** — Dual boot (see our [Dual Boot Guide](/guides/dual-boot-uefi-setup))
+6. Select your timezone
+7. Create your user account with a strong password
+8. Wait for installation to complete (15–30 minutes)
+9. Remove the USB when prompted and restart
 
 > **PARTITION WARNING**: Double-check which disk you are installing to. Selecting the wrong drive will erase its contents permanently.
 
 ## Post-Install Setup
 
-1. Run system updates: `sudo apt update && sudo apt upgrade -y`
-2. Install proprietary drivers if needed (Settings → Additional Drivers)
-3. Install your applications (many are available via apt, Flatpak, or Snap)
-4. Restore your files from your backup
-5. Configure your browser with imported bookmarks
+### 1. Update Your System
+
+Open a terminal (Ctrl+Alt+T) and run:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+For Fedora:
+```bash
+sudo dnf upgrade --refresh -y
+```
+
+### 2. Install Proprietary Drivers
+
+- **Ubuntu/Mint**: Go to Settings → Additional Drivers → Install recommended drivers
+- **Fedora**: Enable [RPM Fusion](https://rpmfusion.org/Configuration) for proprietary NVIDIA drivers
+- **Pop!_OS**: Drivers are pre-installed if you downloaded the NVIDIA ISO
+
+### 3. Install Essential Software
+
+**Package managers:**
+- **APT** (Ubuntu, Mint): `sudo apt install package-name`
+- **DNF** (Fedora): `sudo dnf install package-name`
+- **Flatpak** (all distros): [flathub.org](https://flathub.org/) — Large app store with sandboxed apps
+- **Snap** (Ubuntu): [snapcraft.io](https://snapcraft.io/)
+
+**Common Windows app equivalents:**
+
+| Windows App | Linux Alternative | Install |
+|---|---|---|
+| Microsoft Office | LibreOffice | Pre-installed on most distros |
+| Adobe Photoshop | GIMP | `sudo apt install gimp` or [gimp.org](https://www.gimp.org/) |
+| Notepad++ | Kate / Geany | `sudo apt install kate` |
+| 7-Zip | File Roller (built-in) | Pre-installed |
+| VLC | VLC | `sudo apt install vlc` or [videolan.org](https://www.videolan.org/) |
+| Discord | Discord | [discord.com/download](https://discord.com/download) (Linux .deb) |
+| Steam | Steam | `sudo apt install steam` or [store.steampowered.com](https://store.steampowered.com/about/) |
+| VS Code | VS Code | [code.visualstudio.com](https://code.visualstudio.com/) |
+
+### 4. Restore Your Data
+
+1. Plug in your backup drive
+2. Copy files to your home directory: `~/Documents`, `~/Pictures`, `~/Downloads`, etc.
+3. Import browser bookmarks (Firefox and Chrome both support importing from HTML files)
+
+## Troubleshooting
+
+### Wi-Fi Not Working
+1. Connect via Ethernet temporarily
+2. Run `sudo apt update && sudo apt install linux-firmware`
+3. Check [Linux Wireless Wiki](https://wireless.wiki.kernel.org/) for your adapter
+4. Search [r/linuxhardware](https://www.reddit.com/r/linuxhardware/) for your specific model
+
+### NVIDIA GPU Issues
+1. Do NOT install drivers from nvidia.com directly — use your distro's driver manager
+2. Ubuntu/Mint: Settings → Additional Drivers
+3. See the [NVIDIA Linux Driver Guide](https://wiki.archlinux.org/title/NVIDIA) on the Arch Wiki (applies broadly)
+
+### Application Not Available on Linux
+- Check [Flathub](https://flathub.org/) first
+- Try running the Windows version via [Wine](https://www.winehq.org/) or [Bottles](https://usebottles.com/)
+- Check [ProtonDB](https://www.protondb.com/) for game compatibility via Steam
+
+## Community Resources
+
+- [r/linux4noobs](https://www.reddit.com/r/linux4noobs/) — Beginner Linux questions, very welcoming
+- [r/linuxquestions](https://www.reddit.com/r/linuxquestions/) — General Linux support
+- [Ask Ubuntu](https://askubuntu.com/) — Q&A for Ubuntu and derivatives
+- [Arch Wiki](https://wiki.archlinux.org/) — The most comprehensive Linux documentation (useful for all distros)
+- [Linux Foundation Training](https://training.linuxfoundation.org/resources/) — Free introductory courses
 
 ## Common Mistakes
 
 - Not backing up before starting the install
 - Choosing the wrong partition or disk during installation
 - Skipping driver installation (especially for Wi-Fi and GPU)
+- Installing NVIDIA drivers from the website instead of the package manager
 - Forgetting to export browser data and application configs
+- Not trying the live USB first to verify hardware compatibility
 
 ## Verification
 
@@ -85,3 +216,4 @@ After completing the migration, verify each item:
 - [ ] All personal files are restored from backup
 - [ ] Key applications are installed and functional
 - [ ] Audio, display, and peripherals work correctly
+- [ ] System updates complete without errors

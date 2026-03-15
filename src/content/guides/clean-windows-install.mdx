@@ -2,84 +2,283 @@
 id: "10000000-0000-4000-8000-000000000005"
 slug: "clean-windows-install"
 title: "Clean Windows Installation Guide"
-summary: "Step-by-step guide to performing a clean Windows install with driver preparation and data safety."
+summary: "Step-by-step guide to performing a clean Windows 11 install with official Microsoft tools, driver preparation, and data safety."
 difficulty: "Intermediate"
 time_estimate_minutes: 90
 os: "Windows"
 tags: ["windows", "os-install", "clean-install", "drivers"]
 testing_status: "InternallyTested"
-last_reviewed_date: "2026-03-05T00:00:00.000Z"
+last_reviewed_date: "2026-03-10T00:00:00.000Z"
 author_id: "00000000-0000-4000-8000-000000000001"
 published: true
 hidden: false
 created_at: "2026-02-15T12:00:00.000Z"
-updated_at: "2026-03-05T12:00:00.000Z"
+updated_at: "2026-03-10T12:00:00.000Z"
 kicker: "OS Installation"
 cover: "/images/guides/clean-windows.jpg"
 ---
 
 ## Pre-flight Checklist
 
-- [ ] Back up ALL personal files to an external drive
-- [ ] Download Windows ISO from microsoft.com/software-download
-- [ ] Have your product key or Microsoft account ready
-- [ ] Download network drivers for your hardware onto a second USB
-- [ ] Create a bootable USB with at least 8 GB capacity
+- [ ] Back up ALL personal files to an external drive or cloud storage ([OneDrive](https://www.microsoft.com/en-us/microsoft-365/onedrive/online-cloud-storage), [Google Drive](https://drive.google.com/), or [Backblaze](https://www.backblaze.com/))
+- [ ] Download Windows 11 ISO or Media Creation Tool from [microsoft.com/software-download](https://www.microsoft.com/en-us/software-download/windows11)
+- [ ] Have your product key or Microsoft account ready for activation
+- [ ] Download network/Wi-Fi drivers for your hardware onto a second USB drive
+- [ ] Prepare a USB drive with at least 8 GB capacity for the installer
+- [ ] Note your current Windows edition (Home or Pro) — Settings → System → About
 
-> **DATA LOSS RISK**: A clean install erases everything on the target drive. Verify your backup is complete and accessible from another device before proceeding.
+> **DATA LOSS RISK**: A clean install erases **everything** on the target drive. Verify your backup is complete and accessible from another device before proceeding.
 
-## Creating the Installation Media
+## Why Clean Install?
 
-1. Download the **Media Creation Tool** from Microsoft's website
-2. Run it and select "Create installation media for another PC"
-3. Choose your language, edition, and architecture (64-bit for most systems)
-4. Select USB flash drive as the media type
-5. Wait for the download and creation to complete
+A clean install is better than a "Reset this PC" in many cases:
 
-## Installing Windows
+| Scenario | Best Option |
+|---|---|
+| PC is slow and cluttered | Clean install |
+| Upgrading to Windows 11 from 10 | Clean install for best results |
+| Malware infection | Clean install (reset may not remove rootkits) |
+| Moving to a new SSD | Clean install on the new drive |
+| Minor software issues | Try "Reset this PC" first (Settings → Recovery) |
 
-1. Insert the USB and restart your computer
-2. Enter the boot menu (F12, F2, or Del) and select the USB drive
-3. Select language and click "Install now"
-4. Enter your product key (or click "I don't have a product key" to enter later)
-5. Choose your Windows edition
-6. Select **"Custom: Install Windows only"** for a clean install
-7. Delete all existing partitions on the target drive
-8. Select the unallocated space and click Next
-9. Wait for installation to complete
+Reference: [Microsoft — Reset vs Clean Install](https://support.microsoft.com/en-us/windows/give-your-pc-a-fresh-start)
 
-### Partition Selection
+## Step 1: Preparing Drivers
 
-> **CRITICAL**: Make absolutely sure you are deleting partitions on the correct drive. If you have multiple drives, disconnect the ones you want to keep safe before starting.
+Download drivers BEFORE starting the install. If Windows doesn't have your Wi-Fi driver, you won't be able to get online.
 
-## First Boot Setup
+### Find Your Hardware Model
 
-1. Choose your region and keyboard layout
-2. Connect to Wi-Fi (or use Ethernet)
-3. Sign in with your Microsoft account or create a local account
-4. Configure privacy settings according to your preference
-5. Wait for Windows to finish setting up
+Open **Device Manager** (Win + X → Device Manager) and note:
+- Network adapter brand and model
+- Display adapter (GPU)
+- Your laptop/PC model number (for chipset drivers)
 
-## Post-Install Essentials
+### Download Drivers
 
-1. Install network drivers from your backup USB if Wi-Fi does not work
-2. Run **Windows Update** repeatedly until fully current
-3. Install chipset and GPU drivers from your manufacturer
-4. Install your applications
-5. Restore personal files from your backup
+| Component | Where to Download |
+|---|---|
+| **Intel Wi-Fi/Ethernet** | [intel.com/download](https://www.intel.com/content/www/us/en/download-center/home.html) |
+| **Realtek Wi-Fi/Ethernet** | [realtek.com/downloads](https://www.realtek.com/en/downloads) |
+| **NVIDIA GPU** | [nvidia.com/drivers](https://www.nvidia.com/en-us/geforce/drivers/) |
+| **AMD GPU** | [amd.com/support](https://www.amd.com/en/support) |
+| **Dell all-in-one** | [dell.com/support](https://www.dell.com/support/home) → Enter service tag |
+| **HP all-in-one** | [support.hp.com](https://support.hp.com/) → Auto-detect or serial number |
+| **Lenovo all-in-one** | [support.lenovo.com](https://support.lenovo.com/) → Product search |
+| **ASUS all-in-one** | [asus.com/support](https://www.asus.com/support/) → Model search |
+
+Save all drivers to a **separate USB drive** or a partition you won't format.
+
+## Step 2: Creating Installation Media
+
+### Using the Media Creation Tool (Recommended)
+
+1. Go to [microsoft.com/software-download/windows11](https://www.microsoft.com/en-us/software-download/windows11)
+2. Under "Create Windows 11 Installation Media", click **Download Now**
+3. Run the Media Creation Tool
+4. Accept the license terms
+5. Choose language and edition (usually auto-detected)
+6. Select **USB flash drive**
+7. Choose your USB drive from the list
+8. Click **Next** and wait for the download + writing to complete (15–30 min)
+
+### Using Rufus (Advanced)
+
+If you need more control over the installer (e.g., bypassing TPM checks for unsupported hardware):
+
+1. Download the Windows 11 ISO from Microsoft's download page
+2. Download [Rufus](https://github.com/pbatard/rufus/releases) from GitHub
+3. Run Rufus and select your USB drive
+4. Click SELECT and choose the Windows ISO
+5. Rufus will offer options to remove Windows 11 requirements (TPM, Secure Boot, RAM) — use at your own risk
+6. Click START
+
+Reference: [Rufus GitHub — pbatard/rufus](https://github.com/pbatard/rufus) | [Rufus FAQ](https://github.com/pbatard/rufus/wiki/FAQ)
+
+### Verify the USB Works
+
+1. Restart your computer
+2. Enter the boot menu (F12, F9, F2, or Esc — see our [BIOS/UEFI Guide](/guides/bios-uefi-recovery) for your key)
+3. Select the USB
+4. If you see the Windows installer, the USB works. You can cancel and proceed when ready.
+
+## Step 3: Installing Windows
+
+### Boot from USB
+
+1. Insert the Windows USB and restart
+2. Enter the boot menu and select the USB drive
+3. If the boot menu doesn't appear, enter UEFI settings and set the USB as the first boot device
+
+### The Installer
+
+1. Select your **language**, **time format**, and **keyboard layout**
+2. Click **"Install now"**
+3. Enter your **product key** or click **"I don't have a product key"** to activate later with your Microsoft account
+4. Select your **Windows edition** (must match your license):
+   - **Windows 11 Home** — Standard for most users
+   - **Windows 11 Pro** — Includes BitLocker, Remote Desktop, Hyper-V
+5. Accept the license terms
+6. Select **"Custom: Install Windows only (advanced)"**
+
+### Partition Setup
+
+This is the most critical step. You will see a list of existing partitions.
+
+> **CRITICAL**: Make absolutely sure you are working on the **correct drive**. If you have multiple drives (SSD + HDD), identify the target by size. **Disconnect any drives you want to protect** before starting.
+
+**For a clean install on the same drive:**
+1. Select each existing partition on the target drive
+2. Click **Delete** for each one
+3. Select the resulting **Unallocated space**
+4. Click **Next** — Windows will create the necessary partitions automatically
+
+**For a clean install on a new/empty drive:**
+1. Select the **Unallocated space** on the new drive
+2. Click **Next** — that's it
+
+Windows will now install. This takes 15–30 minutes. The computer will restart several times.
+
+## Step 4: First Boot Setup (OOBE)
+
+1. Select your **country/region** and **keyboard layout**
+2. **Connect to Wi-Fi** or Ethernet
+   - If Wi-Fi doesn't appear, you'll need to install drivers from your backup USB (see Step 5)
+   - To skip the network requirement: press **Shift + F10** to open Command Prompt, type `oobe\bypassnro`, and restart
+3. **Sign in with your Microsoft account** or create a local account
+4. Configure **privacy settings** — review each toggle and disable what you don't want
+5. Wait for Windows to finish setup
+
+Reference: [Microsoft — Set Up Windows 11](https://support.microsoft.com/en-us/windows/set-up-windows-11)
+
+### Creating a Local Account (No Microsoft Account)
+
+If you prefer not to use a Microsoft account:
+
+**Method 1 — Bypass during OOBE:**
+1. At the "Let's connect you to a network" screen
+2. Press **Shift + F10** → type `oobe\bypassnro` → Enter
+3. PC will restart and show a "I don't have internet" option
+
+**Method 2 — Using Rufus:**
+When creating the USB with Rufus, check the option "Remove requirement for an online Microsoft account" in the Windows User Experience dialog.
+
+Reference: [r/Windows11 — Local Account Guide](https://www.reddit.com/r/Windows11/wiki/index)
+
+## Step 5: Post-Install Essentials
+
+### Priority 1: Drivers
+
+1. If Wi-Fi doesn't work, plug in your **driver USB** and install the network driver
+2. Open **Device Manager** (Win + X → Device Manager)
+3. Look for any devices with a **yellow warning triangle** — these need drivers
+4. Install drivers from your backup USB or manufacturer's website
+
+### Priority 2: Windows Update
+
+1. Open **Settings → Windows Update**
+2. Click **"Check for updates"**
+3. Install all available updates
+4. **Restart** when prompted
+5. **Repeat** until "You're up to date" appears — Windows often finds more updates after restarting
+6. Check for **optional driver updates**: Windows Update → Advanced options → Optional updates
+
+### Priority 3: GPU Drivers
+
+Don't rely on Windows Update for GPU drivers — install them directly:
+
+- **NVIDIA**: Download [GeForce Experience](https://www.nvidia.com/en-us/geforce/geforce-experience/) or the driver directly from [nvidia.com/drivers](https://www.nvidia.com/en-us/geforce/drivers/)
+- **AMD**: Download [AMD Software: Adrenalin Edition](https://www.amd.com/en/support) from AMD's support page
+- **Intel**: Usually handled by Windows Update, or download from [intel.com](https://www.intel.com/content/www/us/en/download-center/home.html)
+
+### Priority 4: Essential Software
+
+Use **winget** (built into Windows 11) for fast installs:
+
+```powershell
+# Browser
+winget install Mozilla.Firefox
+
+# Developer tools
+winget install Microsoft.VisualStudioCode
+winget install Git.Git
+winget install OpenJS.NodeJS.LTS
+
+# Utilities
+winget install 7zip.7zip
+winget install VideoLAN.VLC
+winget install Notepad++.Notepad++
+
+# Communication
+winget install Discord.Discord
+```
+
+Or use **Chocolatey** for even more packages: [chocolatey.org](https://chocolatey.org/install)
+
+**Other recommended tools:**
+| Tool | Purpose | Link |
+|---|---|---|
+| Windows Terminal | Modern terminal app | Pre-installed or [GitHub](https://github.com/microsoft/terminal/releases) |
+| PowerToys | Power user utilities | [github.com/microsoft/PowerToys](https://github.com/microsoft/PowerToys/releases) |
+| Everything Search | Instant file search | [voidtools.com](https://www.voidtools.com/) |
+| Snipping Tool | Screenshots | Pre-installed (Win + Shift + S) |
+| TreeSize Free | Disk space analyzer | [jam-software.com](https://www.jam-software.com/treesize_free) |
+
+### Priority 5: Restore Your Data
+
+1. Connect your backup drive
+2. Copy files to the appropriate folders:
+   - Documents → `C:\Users\YourName\Documents\`
+   - Pictures → `C:\Users\YourName\Pictures\`
+   - Downloads → `C:\Users\YourName\Downloads\`
+3. Import browser bookmarks (Firefox: Bookmarks → Manage → Import; Chrome: Settings → Import)
+4. Re-authenticate apps (Discord, Steam, etc.)
+
+## Step 6: Security Hardening
+
+1. **Windows Security**: Open Windows Security and ensure all protections are green
+2. **BitLocker** (Pro only): Settings → Privacy & Security → Device encryption → Turn on
+3. **Windows Hello**: Settings → Accounts → Sign-in options → Set up fingerprint/face/PIN
+4. **Firewall**: Verify Windows Firewall is enabled (it should be by default)
+
+Reference: [Microsoft Security Best Practices](https://learn.microsoft.com/en-us/windows/security/)
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| No Wi-Fi after install | Install network driver from backup USB. Search driver by adapter model on manufacturer site. |
+| "Windows can't be installed on this drive" | Switch between GPT and MBR in Rufus, or convert disk: `diskpart` → `select disk 0` → `convert gpt` |
+| Black screen after install | GPU driver issue. Boot Safe Mode (hold Shift while clicking Restart), install GPU drivers. |
+| Windows not activated | Go to Settings → Activation → Troubleshoot. Sign in with the Microsoft account linked to your license. |
+| Slow performance after install | Wait for Windows Update and indexing to finish (can take hours). Check Task Manager for high disk usage. |
+| Missing programs | Install via winget, Microsoft Store, or download from official sites. |
+
+## Community Resources
+
+- [r/Windows11](https://www.reddit.com/r/Windows11/) — Windows 11 tips, guides, and troubleshooting
+- [r/WindowsHelp](https://www.reddit.com/r/WindowsHelp/) — Dedicated troubleshooting community
+- [r/techsupport](https://www.reddit.com/r/techsupport/) — General tech support
+- [Microsoft Community](https://answers.microsoft.com/) — Official Microsoft support forums
+- [Tom's Hardware](https://www.tomshardware.com/) — In-depth hardware reviews and driver info
+- [Neowin](https://www.neowin.net/) — Windows news and guides
 
 ## Common Mistakes
 
-- Formatting the wrong drive (always double-check drive letters and sizes)
-- Not having network drivers ready offline
+- Formatting the wrong drive (always verify by size and disconnect other drives)
+- Not having network drivers ready offline before starting
 - Skipping Windows Update before installing other software
-- Forgetting to back up application settings and license keys
+- Forgetting to back up application settings, license keys, and game saves
+- Installing GPU drivers from Windows Update instead of the manufacturer (lower performance)
+- Not verifying the backup actually works before wiping the drive
 
 ## Verification
 
-- [ ] Windows boots normally
-- [ ] All Windows Updates are installed
-- [ ] Network connectivity works
-- [ ] All personal files are restored
-- [ ] Device Manager shows no missing drivers
+- [ ] Windows boots normally without errors
+- [ ] All Windows Updates are installed (no pending updates)
+- [ ] Network connectivity works (Wi-Fi and/or Ethernet)
+- [ ] All personal files are restored from backup
+- [ ] Device Manager shows no missing drivers (no yellow warning icons)
+- [ ] GPU drivers are installed from the manufacturer (not generic Windows drivers)
 - [ ] Key applications are installed and functional
+- [ ] Windows is activated (Settings → System → Activation shows "Active")

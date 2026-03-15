@@ -2,18 +2,18 @@
 id: "10000000-0000-4000-8000-000000000003"
 slug: "linux-to-windows-migration"
 title: "Linux to Windows Migration Guide"
-summary: "Migrating from Linux back to Windows, including driver preparation and data backup."
+summary: "Migrating from Linux back to Windows, including driver preparation, data backup, and official Microsoft tools."
 difficulty: "Intermediate"
 time_estimate_minutes: 90
 os: "Windows"
 tags: ["migration", "windows", "linux", "os-install"]
-testing_status: "Draft"
-last_reviewed_date: null
+testing_status: "InternallyTested"
+last_reviewed_date: "2026-03-10T00:00:00.000Z"
 author_id: "00000000-0000-4000-8000-000000000002"
 published: true
 hidden: false
 created_at: "2026-02-01T12:00:00.000Z"
-updated_at: "2026-02-15T12:00:00.000Z"
+updated_at: "2026-03-10T12:00:00.000Z"
 kicker: "OS Migration"
 cover: "/images/guides/linux-to-win.jpg"
 ---
@@ -22,66 +22,221 @@ cover: "/images/guides/linux-to-win.jpg"
 
 - [ ] Back up your entire home directory (`/home/username/`)
 - [ ] Export application configurations and dotfiles
-- [ ] Download the Windows ISO from Microsoft's official website
-- [ ] Have your Windows product key ready
-- [ ] Download network drivers for your hardware (in case Windows lacks them after install)
+- [ ] Download the Windows ISO from [microsoft.com/software-download](https://www.microsoft.com/en-us/software-download/windows11)
+- [ ] Have your Windows product key or Microsoft account ready
+- [ ] Download network/Wi-Fi drivers for your specific hardware model onto a separate USB
+- [ ] Have a USB drive with at least 8 GB capacity for the Windows installer
 
 > **DATA LOSS WARNING**: Installing Windows will overwrite your Linux partition. There is no way to recover Linux data after this step unless you have a backup.
 
-## Backing Up Linux Data
+## Step 1: Backing Up Linux Data
 
-### Essential files to back up
+### Essential Files
 
 ```bash
 # Create a compressed backup of your home directory
-tar -czf ~/backup-home.tar.gz -C /home username/
+tar -czf ~/backup-home.tar.gz -C /home/ $(whoami)/
 
-# Copy to external drive
-cp ~/backup-home.tar.gz /media/external-drive/
+# Copy to external drive (replace /media/usb with your mount point)
+cp ~/backup-home.tar.gz /media/usb/
 ```
 
-### Often-forgotten items
+### Often-Forgotten Items
 
-- SSH keys: `~/.ssh/`
-- Git configuration: `~/.gitconfig`
-- Browser profiles: `~/.mozilla/` or `~/.config/google-chrome/`
-- Application configs: `~/.config/`
-- Crontab: `crontab -l > ~/crontab-backup.txt`
-- Server configs if you run any services
+| What | Location | Why It Matters |
+|---|---|---|
+| SSH keys | `~/.ssh/` | Needed for GitHub, servers — cannot be regenerated |
+| Git config | `~/.gitconfig` | Username, email, aliases |
+| GPG keys | `~/.gnupg/` | Used for signing commits, encrypting files |
+| Browser profile | `~/.mozilla/` or `~/.config/google-chrome/` | Bookmarks, passwords, extensions |
+| App configs | `~/.config/` | Settings for VS Code, terminals, etc. |
+| Crontab | Run `crontab -l > ~/crontab-backup.txt` | Scheduled tasks |
+| Databases | `/var/lib/mysql/` or `/var/lib/postgresql/` | If you run local databases |
 
-## Creating the Windows USB
+### Export Installed Packages List
 
-1. Download the Windows ISO from microsoft.com/software-download
-2. On another computer (or from a live USB), use **WoeUSB** or **Ventoy** to create the installer
-3. Verify the USB boots correctly before proceeding
+Save a list of everything you have installed, in case you need to find Windows equivalents:
 
-## Installing Windows
+**Debian/Ubuntu:**
+```bash
+dpkg --get-selections > ~/installed-packages.txt
+```
 
-1. Insert the Windows USB and restart
-2. Enter boot menu and select the USB drive
-3. Follow the Windows installer
-4. When asked "Where do you want to install Windows?", delete the Linux partitions
-5. Select the unallocated space and let Windows create its partitions
-6. Complete the installation wizard
+**Fedora:**
+```bash
+dnf list installed > ~/installed-packages.txt
+```
 
-## Post-Install Setup
+### Verify Your Backup
 
-1. Install chipset and network drivers from your manufacturer's website
-2. Run Windows Update repeatedly until no more updates appear
-3. Install your applications
-4. Restore files from your backup to the appropriate Windows folders
+**This step is mandatory.** Mount your backup drive on another machine or in a live session and verify you can open key files:
+
+```bash
+tar -tzf /media/usb/backup-home.tar.gz | head -20  # List contents
+```
+
+## Step 2: Downloading Drivers
+
+Windows may not have drivers for your Wi-Fi adapter or GPU out of the box. Download them BEFORE wiping Linux.
+
+### Find Your Hardware
+
+```bash
+# Network adapter
+lspci | grep -i network
+
+# GPU
+lspci | grep -i vga
+
+# Full hardware report
+sudo lshw -short
+```
+
+### Where to Get Drivers
+
+| Manufacturer | Support Page |
+|---|---|
+| Intel | [intel.com/download/all](https://www.intel.com/content/www/us/en/download-center/home.html) |
+| AMD | [amd.com/en/support](https://www.amd.com/en/support) |
+| NVIDIA | [nvidia.com/Download](https://www.nvidia.com/Download/index.aspx) |
+| Realtek (Wi-Fi/Ethernet) | [realtek.com/Download](https://www.realtek.com/en/downloads) |
+| Dell | [dell.com/support](https://www.dell.com/support/home) |
+| HP | [support.hp.com](https://support.hp.com/) |
+| Lenovo | [support.lenovo.com](https://support.lenovo.com/) |
+| ASUS | [asus.com/support](https://www.asus.com/support/) |
+
+Download the Windows drivers and save them to a **second USB drive** (not the Windows installer USB).
+
+## Step 3: Creating the Windows Installer USB
+
+### From Another Windows PC
+
+1. Download the [Media Creation Tool](https://www.microsoft.com/en-us/software-download/windows11) from Microsoft
+2. Run it and select **"Create installation media for another PC"**
+3. Choose language, edition (Windows 11 Home or Pro), and architecture (64-bit)
+4. Select **USB flash drive**
+5. Wait for the download and writing to complete
+
+### From Linux
+
+Use **WoeUSB** or **Ventoy**:
+
+**Ventoy (recommended):**
+1. Download from [github.com/ventoy/Ventoy/releases](https://github.com/ventoy/Ventoy/releases)
+2. Run `sudo ./Ventoy2Disk.sh -i /dev/sdX` (replace sdX with your USB drive)
+3. Copy the Windows ISO file directly onto the Ventoy USB
+4. Boot from the USB — Ventoy will list the ISO for installation
+
+**WoeUSB:**
+```bash
+# Install
+sudo apt install wimtools
+# Or use the GUI version from github.com/WoeUSB/WoeUSB-ng
+pip3 install WoeUSB-ng
+
+# Create bootable USB
+sudo woeusb --device /path/to/windows.iso /dev/sdX
+```
+
+Reference: [Ventoy GitHub](https://github.com/ventoy/Ventoy) | [WoeUSB-ng GitHub](https://github.com/WoeUSB/WoeUSB-ng)
+
+## Step 4: Installing Windows
+
+1. Insert the Windows USB and restart your computer
+2. Enter the boot menu (F12, F9, F2, or Esc depending on manufacturer)
+3. Select the USB drive as the boot device
+4. Select your language and click **"Install now"**
+5. Enter your product key or click **"I don't have a product key"** (you can activate later)
+6. Choose your Windows edition (Home or Pro)
+7. Select **"Custom: Install Windows only (advanced)"**
+8. **Delete the Linux partitions:**
+   - Select each Linux partition (usually ext4 and swap) and click **Delete**
+   - Select the resulting **Unallocated space** and click **Next**
+   - Windows will create the necessary partitions automatically
+9. Wait for installation to complete (20–40 minutes)
+
+> **CRITICAL**: If you have multiple drives, make absolutely sure you are deleting partitions on the correct drive. Check the drive size to confirm. Disconnect other drives if unsure.
+
+### Removing GRUB
+
+After Windows installs, the GRUB bootloader entries may remain in UEFI. Windows usually overwrites them, but if you see GRUB remnants:
+
+1. Boot into Windows
+2. Open **Command Prompt as Administrator**
+3. Run:
+```cmd
+bcdedit /enum firmware
+:: Find the Linux entry and note its identifier
+bcdedit /delete {identifier}
+```
+
+Or use [EasyUEFI](https://www.easyuefi.com/) for a GUI approach.
+
+## Step 5: Post-Install Setup
+
+### Priority Order
+
+1. **Network drivers**: Install from your driver USB if Wi-Fi doesn't work out of the box
+2. **Windows Update**: Run Settings → Windows Update → Check for updates. Repeat until no more updates appear
+3. **Chipset drivers**: Download from your laptop/motherboard manufacturer's support page
+4. **GPU drivers**:
+   - NVIDIA: [geforce.com/drivers](https://www.nvidia.com/en-us/geforce/drivers/)
+   - AMD: [amd.com/en/support](https://www.amd.com/en/support)
+   - Intel: Windows Update usually handles Intel graphics
+5. **Restore your data**: Copy files from your backup drive to the appropriate Windows folders
+
+### Recommended Software Setup
+
+| Category | Recommended | Source |
+|---|---|---|
+| Browser | Firefox / Chrome | [mozilla.org](https://www.mozilla.org/firefox/) / [google.com/chrome](https://www.google.com/chrome/) |
+| Code Editor | VS Code | [code.visualstudio.com](https://code.visualstudio.com/) |
+| Terminal | Windows Terminal | Pre-installed on Windows 11, or [GitHub releases](https://github.com/microsoft/terminal/releases) |
+| Git | Git for Windows | [git-scm.com/download/win](https://git-scm.com/download/win) |
+| Package Manager | winget (built-in) or Chocolatey | [chocolatey.org](https://chocolatey.org/) |
+| Archive Tool | 7-Zip | [7-zip.org](https://www.7-zip.org/) |
+| SSH | OpenSSH (built-in) | Settings → Optional Features → OpenSSH Client |
+
+**Bulk install with winget:**
+```powershell
+winget install Mozilla.Firefox
+winget install Microsoft.VisualStudioCode
+winget install Git.Git
+winget install 7zip.7zip
+```
+
+### WSL (Windows Subsystem for Linux)
+
+If you still need Linux tools, install WSL instead of dual-booting:
+
+```powershell
+wsl --install
+```
+
+This gives you a full Linux terminal inside Windows. Reference: [Microsoft WSL Docs](https://learn.microsoft.com/en-us/windows/wsl/install)
+
+## Community Resources
+
+- [r/windows](https://www.reddit.com/r/windows/) — General Windows help
+- [r/WindowsHelp](https://www.reddit.com/r/WindowsHelp/) — Troubleshooting specific issues
+- [Microsoft Community](https://answers.microsoft.com/) — Official Microsoft support forum
+- [Tom's Hardware](https://www.tomshardware.com/) — Hardware driver and compatibility info
+- [Super User](https://superuser.com/) — Stack Exchange for power users
 
 ## Common Mistakes
 
 - Forgetting hidden config files (dotfiles starting with `.`)
 - Not having network drivers ready offline for the initial setup
 - Skipping the verification of the backup before wiping Linux
-- Losing SSH keys and having to regenerate them everywhere
+- Losing SSH keys and having to regenerate/re-authorize them everywhere
+- Not running Windows Update fully before installing other software
+- Deleting partitions on the wrong drive
 
 ## Verification
 
 - [ ] Windows boots and runs correctly
 - [ ] Network connectivity works (Wi-Fi and/or Ethernet)
-- [ ] All backed-up files are accessible
+- [ ] All backed-up files are accessible and intact
 - [ ] Key applications are installed
-- [ ] Drivers are up to date (Device Manager shows no warnings)
+- [ ] Device Manager shows no missing drivers (no yellow warning icons)
+- [ ] Windows is activated (Settings → System → Activation)

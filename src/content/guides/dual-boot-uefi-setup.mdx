@@ -2,7 +2,7 @@
 id: "10000000-0000-4000-8000-000000000002"
 slug: "dual-boot-uefi-setup"
 title: "Dual Boot Setup with UEFI"
-summary: "How to set up a Windows + Linux dual boot on a UEFI system safely."
+summary: "How to set up a Windows + Linux dual boot on a UEFI system safely, with official tools and verified steps."
 difficulty: "Advanced"
 time_estimate_minutes: 90
 os: "Any"
@@ -20,79 +20,204 @@ cover: "/images/guides/dual-boot.jpg"
 
 ## Pre-flight Checklist
 
-- [ ] Back up all data on both drives
-- [ ] Confirm your system uses UEFI mode (not Legacy/CSM)
-- [ ] Have both OS installer USBs ready
+- [ ] Back up all data on both drives (see [Backblaze](https://www.backblaze.com/) or use an external drive)
+- [ ] Confirm your system uses UEFI mode (not Legacy/CSM) — check in firmware settings
+- [ ] Have your Linux installer USB ready (see our [Windows to Linux Migration Guide](/guides/windows-to-linux-migration) for USB creation)
 - [ ] Ensure at least 50 GB free space for the second OS
 - [ ] Know your UEFI key (usually F2 or Del at boot)
+- [ ] Your Windows installation is fully updated via Windows Update
 
 > **DISK PARTITIONING**: Incorrect partitioning can destroy all data on a drive. Triple-check your partition selections before confirming any changes.
 
-## Preparing Windows
+## Understanding UEFI vs Legacy BIOS
 
-1. Open **Disk Management** (right-click Start → Disk Management)
-2. Right-click your main Windows partition → **Shrink Volume**
-3. Shrink by at least 50,000 MB (50 GB) for the Linux partition
-4. Do NOT format the new unallocated space — the Linux installer will handle it
+Modern systems use UEFI (Unified Extensible Firmware Interface) instead of the older BIOS. Key differences:
+
+- UEFI uses a **GPT** partition table (supports drives > 2TB, more partitions)
+- UEFI has **Secure Boot** (can be disabled for Linux compatibility)
+- UEFI stores boot entries in **NVRAM** (not on the disk's MBR)
+
+**Both your Windows and Linux installs must use the same boot mode.** Mixing UEFI and Legacy will cause boot failures.
+
+Reference: [Ubuntu UEFI Documentation](https://help.ubuntu.com/community/UEFI) | [Arch Wiki — Dual Boot](https://wiki.archlinux.org/title/Dual_boot_with_Windows)
+
+## Step 1: Preparing Windows
+
+### Shrink Your Windows Partition
+
+1. Press **Win + X** → select **Disk Management**
+2. Right-click your main Windows partition (usually C:) → **Shrink Volume**
+3. Enter the amount to shrink in MB:
+   - **Minimum**: 50,000 MB (50 GB) for a basic Linux install
+   - **Recommended**: 100,000 MB (100 GB) for comfortable daily use
+4. Click **Shrink** and wait
+5. You should see **Unallocated** space appear — do NOT format it
+
+If Disk Management cannot shrink enough space, it's because unmovable files are at the end of the partition. Use [GParted Live USB](https://gparted.org/livecd.php) to defragment and shrink instead.
 
 ### Disable Fast Startup
 
-Fast Startup can cause filesystem corruption in dual-boot setups:
+Fast Startup locks the NTFS filesystem, which can cause corruption when Linux tries to access the Windows partition:
 
-1. Open Control Panel → Power Options → "Choose what the power buttons do"
-2. Click "Change settings that are currently unavailable"
-3. Uncheck "Turn on fast startup"
-4. Save changes
+1. Open **Control Panel** → **Power Options**
+2. Click **"Choose what the power buttons do"**
+3. Click **"Change settings that are currently unavailable"**
+4. **Uncheck** "Turn on fast startup"
+5. Click **Save changes**
 
-## Configuring UEFI
+Reference: [Microsoft — Fast Startup](https://learn.microsoft.com/en-us/troubleshoot/windows-client/startup/fast-startup-causes-system-issues)
 
-1. Restart and enter UEFI settings
-2. **Disable Secure Boot** temporarily (you can re-enable it later for Ubuntu/Fedora)
-3. Verify boot mode is set to UEFI (not Legacy/CSM)
-4. Save and exit
+### Disable BitLocker (if enabled)
 
-> **BIOS/UEFI WARNING**: Changing firmware settings incorrectly can prevent your system from booting. Only change the settings described above.
+BitLocker can prevent Linux from reading the Windows partition:
 
-## Installing Linux
+1. Open **Settings** → **Privacy & Security** → **Device encryption**
+2. If enabled, click **Turn off** and wait for decryption to complete
+
+## Step 2: Configuring UEFI Firmware
+
+1. Restart and enter UEFI settings (F2, Del, or F10 during the splash screen)
+2. **Disable Secure Boot** temporarily:
+   - Navigate to **Security** or **Boot** tab
+   - Set Secure Boot to **Disabled**
+   - Note: Ubuntu and Fedora support Secure Boot, so you can re-enable it after install. Other distros may not.
+3. Verify **Boot Mode** is set to **UEFI** (not Legacy/CSM)
+4. **Save and Exit**
+
+> **BIOS/UEFI WARNING**: Changing firmware settings incorrectly can prevent your system from booting. Only change the settings described above. Take a photo of the current settings before making changes.
+
+Reference: [Dell UEFI Settings Guide](https://www.dell.com/support/kbdoc/en-us/000131829/how-to-access-uefi-bios-system-setup-from-windows-on-your-dell-system) | [HP UEFI Guide](https://support.hp.com/us-en/document/ish_03655193-03697043-16)
+
+## Step 3: Installing Linux Alongside Windows
 
 1. Boot from the Linux USB installer
-2. Choose **"Install alongside Windows Boot Manager"**
-3. The installer should detect the free space you created
-4. Select the unallocated space — do NOT format the Windows partition
+2. Choose **"Install alongside Windows Boot Manager"** if available
+3. If the installer shows a partition editor instead:
+   - Select the **unallocated free space** you created earlier
+   - Create a new partition with filesystem **ext4** and mount point **/**
+   - Optionally create a **swap** partition (same size as your RAM, or 8 GB max)
+   - **DO NOT** touch the Windows partitions (they'll be labeled NTFS)
+4. Set the **bootloader location** to the drive containing your EFI System Partition (usually `/dev/sda` or `/dev/nvme0n1`)
 5. Complete the installation normally
 6. Reboot when prompted
 
-## Verifying the Boot Menu
+> **CRITICAL**: Do NOT format or delete any partition labeled "Windows", "Recovery", "EFI System Partition", or "Microsoft Reserved". These are essential for Windows to boot.
 
-After installation, GRUB (the Linux boot loader) should appear at startup with options for both Linux and Windows.
+## Step 4: Verifying the Boot Menu (GRUB)
 
-If GRUB does not appear:
+After installation, GRUB (the Linux bootloader) should appear at startup with options for both Linux and Windows.
+
+### If GRUB Appears — You're Done
+
+- Select **Ubuntu** (or your distro name) to boot Linux
+- Select **Windows Boot Manager** to boot Windows
+- The default OS and timeout can be configured later
+
+### If GRUB Does Not Appear
+
+Your system may be booting directly into Windows. Fix it:
+
+**Option A — Change UEFI Boot Order:**
+1. Enter UEFI firmware settings
+2. Go to **Boot** tab
+3. Move **ubuntu** or **Linux** above **Windows Boot Manager**
+4. Save and exit
+
+**Option B — Repair GRUB from Live USB:**
 1. Boot from the Linux USB in "Try" mode
-2. Open a terminal
-3. Run `sudo update-grub`
-4. Reboot and check again
-
-### If Windows Boot Manager Takes Over
-
-Run these commands from a Linux live USB terminal:
+2. Open a terminal and run:
 
 ```bash
-sudo mount /dev/sdaX /mnt  # Replace sdaX with your Linux partition
-sudo grub-install --root-directory=/mnt /dev/sda
-sudo update-grub
+# Identify your Linux partition
+sudo fdisk -l
+
+# Mount your Linux partition (replace sdaX with your partition)
+sudo mount /dev/sdaX /mnt
+sudo mount /dev/sdaY /mnt/boot/efi  # Mount EFI partition
+
+# Reinstall GRUB
+sudo grub-install --target=x86_64-efi --efi-directory=/mnt/boot/efi --boot-directory=/mnt/boot
+sudo chroot /mnt update-grub
 ```
+
+Reference: [Ubuntu — Recovering GRUB](https://help.ubuntu.com/community/Grub2/Installing) | [Boot-Repair tool](https://github.com/nicknomo/boot-repair) (automated fix)
+
+### If Windows Boot Manager Takes Over After Updates
+
+Windows Update sometimes overwrites the UEFI boot order. Run this from a Linux live USB:
+
+```bash
+sudo efibootmgr -v  # List boot entries
+sudo efibootmgr -o 0002,0000  # Set Linux first (adjust numbers)
+```
+
+Reference: [efibootmgr — Arch Wiki](https://wiki.archlinux.org/title/EFISTUB#efibootmgr)
+
+## Step 5: Post-Dual-Boot Configuration
+
+### Fix the Clock Drift Issue
+
+Windows and Linux handle the hardware clock differently. Windows uses local time; Linux uses UTC. This causes the clock to be wrong when switching OS.
+
+**Fix (run in Linux):**
+```bash
+timedatectl set-local-rtc 1 --adjust-system-clock
+```
+
+Or fix on the Windows side by setting the registry key:
+```
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation
+Add DWORD: RealTimeIsUniversal = 1
+```
+
+Reference: [Arch Wiki — Time Standard](https://wiki.archlinux.org/title/System_time#UTC_in_Microsoft_Windows)
+
+### Access Windows Files from Linux
+
+Your Windows partition is automatically detected by most Linux distros. You can mount it read-only:
+
+```bash
+sudo mount -t ntfs3 -o ro /dev/sdaX /mnt/windows
+```
+
+> **Warning**: Do not mount the Windows partition as read-write while Fast Startup is enabled — it will corrupt the filesystem.
+
+### Access Linux Files from Windows
+
+Use [Linux Reader by DiskInternals](https://www.diskinternals.com/linux-reader/) (free, read-only) or [ext2fsd](https://github.com/matt-wu/Ext3Fsd) for ext4 access on Windows.
+
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| GRUB doesn't show Windows | Run `sudo update-grub` — it re-scans for OS entries |
+| Windows says "Your PC didn't start correctly" | Boot into Windows Recovery → Startup Repair |
+| Linux can't see Wi-Fi | Install `linux-firmware` package, check [r/linuxhardware](https://www.reddit.com/r/linuxhardware/) |
+| GRUB disappeared after Windows Update | Re-add Linux to boot order via `efibootmgr` or Boot-Repair |
+| Disk space running low on Linux | Resize partitions with [GParted Live USB](https://gparted.org/livecd.php) |
+
+## Community Resources
+
+- [r/linuxquestions](https://www.reddit.com/r/linuxquestions/) — General troubleshooting help
+- [r/linux4noobs](https://www.reddit.com/r/linux4noobs/) — Beginner-friendly, no judgement
+- [Arch Wiki — Dual Boot](https://wiki.archlinux.org/title/Dual_boot_with_Windows) — Most comprehensive reference
+- [Ubuntu Forums](https://ubuntuforums.org/) — Official Ubuntu community support
+- [Ask Ubuntu](https://askubuntu.com/) — Stack Exchange Q&A for Ubuntu
 
 ## Common Mistakes
 
 - Formatting the Windows partition during Linux install
-- Not disabling Fast Startup (causes NTFS corruption)
-- Installing in Legacy mode when Windows uses UEFI
+- Not disabling Fast Startup (causes NTFS corruption when accessing from Linux)
+- Installing in Legacy mode when Windows uses UEFI (boot modes must match)
 - Forgetting to shrink the partition before installing
+- Not disabling BitLocker before installing Linux
+- Installing GRUB to the wrong drive
 
 ## Verification
 
-- [ ] GRUB boot menu shows both OS options
+- [ ] GRUB boot menu shows both OS options at startup
 - [ ] Windows boots normally from the GRUB menu
 - [ ] Linux boots normally from the GRUB menu
 - [ ] Both operating systems can access the internet
-- [ ] Time zone is correct in both OS (set UTC in Linux to avoid clock drift)
+- [ ] Clock shows the correct time in both OS
+- [ ] Windows partition is accessible (read-only) from Linux
