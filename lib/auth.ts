@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/guards";
 import type { UserRole } from "@contracts/enums";
 
 export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
+  display_name: string;
 }
 
 /**
  * Get the authenticated user from the request. Returns null if not authenticated.
  */
 export async function getAuthUser(): Promise<AuthUser | null> {
+  if (!isSupabaseConfigured()) return null;
+
   const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -21,7 +27,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
 
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("role")
+    .select("role, display_name")
     .eq("id", user.id)
     .single();
 
@@ -29,6 +35,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     id: user.id,
     email: user.email ?? "",
     role: (profile?.role as UserRole) ?? "user",
+    display_name: (profile?.display_name as string) ?? user.email?.split("@")[0] ?? "User",
   };
 }
 

@@ -1,5 +1,6 @@
 import "@/app/globals.css";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
+import { ToastProvider } from "@/components/toast-provider";
 
 export const metadata = {
   title: "FixGuide Lab",
@@ -15,11 +16,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SiteHeader />
-        <main className="page-shell mx-auto max-w-7xl px-5 py-10">
-          {children}
-        </main>
-        <SiteFooter />
+        <ToastProvider>
+          <SiteHeader />
+          <main className="page-shell mx-auto max-w-7xl px-5 py-10">
+            {children}
+          </main>
+          <SiteFooter />
+        </ToastProvider>
       </body>
     </html>
   );

@@ -2,20 +2,35 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SignOutButton } from "@/components/sign-out-button";
 
-const navItems = [
-  { label: "Guides", href: "/guides" },
-  { label: "Projects", href: "/projects" },
-  { label: "About", href: "/about" },
-  { label: "Safety", href: "/safety" },
-  { label: "Contribute", href: "/contribute" },
-  { label: "Moderation", href: "/moderation" },
-  { label: "Profile", href: "/profile" },
-  { label: "Sign In", href: "/signin" },
-];
+interface MobileNavProps {
+  user: { displayName: string; role: string } | null;
+}
 
-export function MobileNav() {
+const canContribute = (role: string) =>
+  role === "contributor" || role === "moderator" || role === "admin";
+const canModerate = (role: string) =>
+  role === "moderator" || role === "admin";
+
+export function MobileNav({ user }: MobileNavProps) {
   const [open, setOpen] = useState(false);
+
+  const navItems = [
+    { label: "Guides", href: "/guides" },
+    { label: "Projects", href: "/projects" },
+    { label: "About", href: "/about" },
+    { label: "Safety", href: "/safety" },
+    ...(user && canContribute(user.role)
+      ? [{ label: "Contribute", href: "/contribute" }]
+      : []),
+    ...(user && canModerate(user.role)
+      ? [{ label: "Moderation", href: "/moderation" }]
+      : []),
+    ...(user
+      ? [{ label: "Profile", href: "/profile" }]
+      : [{ label: "Sign In", href: "/signin" }]),
+  ];
 
   return (
     <div className="md:hidden">
@@ -54,6 +69,11 @@ export function MobileNav() {
                 </Link>
               </li>
             ))}
+            {user && (
+              <li>
+                <SignOutButton className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[var(--muted)] transition hover:bg-[var(--surface)] hover:text-[var(--ink)]" />
+              </li>
+            )}
           </ul>
         </nav>
       )}

@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/site-ui";
 import { ModActionButtons } from "@/components/mod-action-buttons";
 import { getModerationQueue } from "@/lib/api-client";
+import { getAuthUser, canModerate } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
 
@@ -10,6 +12,24 @@ export const metadata: Metadata = {
 };
 
 export default async function ModerationPage() {
+  const user = await getAuthUser();
+
+  if (!user) redirect("/signin");
+
+  if (!canModerate(user.role)) {
+    return (
+      <div className="space-y-8">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Moderation" }]} />
+        <div className="py-12 text-center">
+          <h1 className="text-2xl font-semibold">Moderator Access Required</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Your current role is <strong>{user.role}</strong>. You need moderator or admin access to view this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const queue = await getModerationQueue();
 
   return (
@@ -19,7 +39,7 @@ export default async function ModerationPage() {
       <div>
         <h1 className="text-3xl font-semibold">Moderation Queue</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Review reported content and take appropriate action. Moderator access required.
+          Review reported content and take appropriate action.
         </p>
       </div>
 

@@ -1,6 +1,7 @@
+import { redirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/site-ui";
 import { SignInForm } from "@/components/signin-form";
-import { getProfileForUi } from "@/lib/api-client";
+import { getAuthUser } from "@/lib/auth";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,8 +9,9 @@ export const metadata: Metadata = {
   description: "Sign in to FixGuide Lab to contribute guides, leave notes, and vote.",
 };
 
-export default function SignInPage() {
-  const profile = getProfileForUi();
+export default async function SignInPage() {
+  const user = await getAuthUser();
+  if (user) redirect("/profile");
 
   return (
     <div className="space-y-8">
@@ -22,24 +24,6 @@ export default function SignInPage() {
             Sign in to contribute guides, leave community notes, and vote on content.
           </p>
         </div>
-
-        {/* Mock current profile display */}
-        {profile && (
-          <div className="card-surface rounded-[1.2rem] px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
-              Current mock profile
-            </p>
-            <div className="mt-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent-strong)]">
-                {(profile.display_name ?? "?")[0].toUpperCase()}
-              </div>
-              <div>
-                <p className="font-semibold">{profile.display_name}</p>
-                <p className="text-xs text-[var(--muted)]">{profile.role}</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         <SignInForm />
       </div>
