@@ -1,55 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { GuideListQuerySchema } from "@contracts/schemas";
-import { parseQuery } from "@/lib/api-utils";
-import { getAuthUser } from "@/lib/auth";
+import { listGuides } from "@/lib/api-client";
 import { createRequestLogger } from "@/lib/logger";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
-  const user = await getAuthUser();
-  const log = createRequestLogger("GET", "/api/guides", user?.id);
+  const log = createRequestLogger("GET", "/api/guides");
   log.info("Listing guides");
 
-  const rl = checkRateLimit(getRateLimitKey(request, user?.id));
+  const rl = checkRateLimit(getRateLimitKey(request));
   if (rl) return rl;
 
-  const parsed = parseQuery(request.url, GuideListQuerySchema);
-  if ("error" in parsed) return parsed.error;
+  const url = new URL(request.url);
+  const query = url.searchParams.get("query") ?? undefined;
+  const difficulty = url.searchParams.get("difficulty") ?? undefined;
+  const os = url.searchParams.get("os") ?? undefined;
+  const tag = url.searchParams.get("tag") ?? undefined;
+  const page = Number(url.searchParams.get("page") ?? 1);
+  const limit = Number(url.searchParams.get("limit") ?? 20);
 
-  const { query, difficulty, os, tag, page, limit } = parsed.data;
-  const offset = (page - 1) * limit;
-
-  const supabase = await createSupabaseServerClient();
-
-  let q = supabase
-    .from("guides")
-    .select("*", { count: "exact" })
-    .eq("published", true)
-    .eq("hidden", false)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (query) {
-    q = q.or(`title.ilike.%${query}%,summary.ilike.%${query}%`);
+  try {
+    const result = await listGuides({ query, difficulty: difficulty as "Beginner" | "Intermediate" | "Advanced" | undefined, os: os as "Windows" | "Linux" | "macOS" | "Any" | undefined, tag, page, limit });
+    log.info("Guides listed", { total: result.total });
+    return NextResponse.json(result);
+  } catch (err) {
+    log.error("Failed to list guides", { error: String(err) });
+    return NextResponse.json({ error: "Failed to list guides" }, { status: 500 });
   }
-  if (difficulty) {
-    q = q.eq("difficulty", difficulty);
-  }
-  if (os) {
-    q = q.eq("os", os);
-  }
-  if (tag) {
-    q = q.contains("tags", [tag]);
-  }
-
-  const { data, error, count } = await q;
-
-  if (error) {
-    log.error("DB error listing guides", { dbError: error.message });
-    return NextResponse.json({ error: "Database error" }, { status: 500 });
-  }
-
-  log.info("Guides listed", { count });
-  return NextResponse.json({ data, total: count, page, limit });
 }

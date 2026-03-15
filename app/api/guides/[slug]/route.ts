@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getAuthUser } from "@/lib/auth";
+import { getGuideDetail } from "@/lib/api-client";
 import { createRequestLogger } from "@/lib/logger";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
@@ -9,37 +8,23 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const user = await getAuthUser();
-  const log = createRequestLogger("GET", `/api/guides/${slug}`, user?.id);
+  const log = createRequestLogger("GET", `/api/guides/${slug}`);
   log.info("Fetching guide by slug");
 
-  const rl = checkRateLimit(getRateLimitKey(request, user?.id));
+  const rl = checkRateLimit(getRateLimitKey(request));
   if (rl) return rl;
 
-  const supabase = await createSupabaseServerClient();
+  try {
+    const detail = await getGuideDetail(slug);
+    if (!detail) {
+      log.warn("Guide not found", { slug });
+      return NextResponse.json({ error: "Guide not found" }, { status: 404 });
+    }
 
-  const { data, error } = await supabase
-    .from("guides")
-    .select("*")
-    .eq("slug", slug)
-    .eq("published", true)
-    .eq("hidden", false)
-    .single();
-
-  if (error || !data) {
-    log.warn("Guide not found", { slug });
-    return NextResponse.json({ error: "Guide not found" }, { status: 404 });
+    log.info("Guide fetched", { guideId: detail.data.id });
+    return NextResponse.json(detail);
+  } catch (err) {
+    log.error("Failed to fetch guide", { error: String(err) });
+    return NextResponse.json({ error: "Failed to fetch guide" }, { status: 500 });
   }
-
-  // Fetch comments for this guide
-  const { data: comments } = await supabase
-    .from("comments")
-    .select("*, user_profiles(display_name, avatar_url)")
-    .eq("target_type", "guide")
-    .eq("target_id", data.id)
-    .eq("hidden", false)
-    .order("created_at", { ascending: true });
-
-  log.info("Guide fetched", { guideId: data.id });
-  return NextResponse.json({ data, comments: comments ?? [] });
 }
