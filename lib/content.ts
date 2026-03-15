@@ -60,22 +60,31 @@ async function readCollection<TFrontmatter extends z.ZodRawShape>(
   schema: z.ZodObject<TFrontmatter>,
 ) {
   const absoluteDirectory = path.join(process.cwd(), "src", "content", directory);
-  const entries = await fs.readdir(absoluteDirectory, { withFileTypes: true });
 
-  return Promise.all(
-    entries
-      .filter((entry) => entry.isFile() && entry.name.endsWith(".mdx"))
-      .map(async (entry) => {
-        const filePath = path.join(absoluteDirectory, entry.name);
-        const source = await fs.readFile(filePath, "utf8");
-        const { data, content } = matter(source);
+  let entries;
+  try {
+    entries = await fs.readdir(absoluteDirectory, { withFileTypes: true });
+  } catch {
+    // Directory missing (e.g., not bundled in serverless). Return empty.
+    return [];
+  }
 
-        return {
-          frontmatter: schema.parse(data),
-          rawBody: content.trim(),
-        };
-      }),
-  );
+  const results = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".mdx")) continue;
+    try {
+      const filePath = path.join(absoluteDirectory, entry.name);
+      const source = await fs.readFile(filePath, "utf8");
+      const { data, content } = matter(source);
+      results.push({
+        frontmatter: schema.parse(data),
+        rawBody: content.trim(),
+      });
+    } catch {
+      // Skip files that fail to parse rather than crash the entire collection
+    }
+  }
+  return results;
 }
 
 export const getAllGuides = cache(async () => {

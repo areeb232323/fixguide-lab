@@ -41,11 +41,16 @@ export async function POST(request: NextRequest) {
   }
 
   // ---- Retrieval ----
-  const { context, citations } = await retrieveContext(
-    message,
-    context_type,
-    context_id,
-  );
+  let context = "No specific content found in our database for this query.";
+  let citations: AiChatResponse["citations"] = [];
+
+  try {
+    const retrieval = await retrieveContext(message, context_type, context_id);
+    context = retrieval.context;
+    citations = retrieval.citations;
+  } catch {
+    log.warn("Retrieval failed, using fallback");
+  }
 
   // ---- Generate response ----
   // In production, this would call an LLM API (e.g., Anthropic Claude).
